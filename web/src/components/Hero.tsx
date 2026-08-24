@@ -111,7 +111,7 @@ export default function Hero() {
             ["The catch", "leakage"], ["The data", "data"], ["How it works", "primer"],
             ["Speed", "latency"], ["Sensor count", "electrodes"], ["Setup", "calibration"],
             ["Mistakes", "confusion"], ["Inside the model", "latent"],
-            ["Try it", "live"], ["Methods", "methods"],
+            ["Try it", "live"], ["Methods", "methods"], ["Sources", "references"],
           ].map(([label, id]) => (
             <a key={id} href={`#${id}`} className="focusable underline underline-offset-4 hover:opacity-70"
                style={{ color: "var(--text-secondary)" }}>{label}</a>

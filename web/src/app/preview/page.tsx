@@ -11,12 +11,13 @@ import Leakage from "@/components/Leakage";
 import LiveDecoder from "@/components/LiveDecoder";
 import Methods from "@/components/Methods";
 import Primer from "@/components/Primer";
+import References from "@/components/References";
 import SignalExplorer from "@/components/SignalExplorer";
 
 const MAP: Record<string, React.ComponentType> = {
   leakage: Leakage, data: SignalExplorer, primer: Primer, latency: Latency,
   electrodes: Electrodes, calibration: Calibration, confusion: Confusion, latent: LatentSpace,
-  live: LiveDecoder, methods: Methods,
+  live: LiveDecoder, methods: Methods, references: References,
 };
 
 function Inner() {

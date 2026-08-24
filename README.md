@@ -134,6 +134,31 @@ ships to the browser and fails the build if it drifts from the Python version. L
   know and everything I had to guess is written down in `data/PROVENANCE.md`. If you
   recognise this dataset, please open an issue.
 
+## Sources
+
+Four papers, each looked up rather than cited from memory:
+
+- Hudgins, B., Parker, P. and Scott, R. N. (1993). A new strategy for multifunction
+  myoelectric control. *IEEE Transactions on Biomedical Engineering* 40(1), 82 to 94.
+  [10.1109/10.204774](https://doi.org/10.1109/10.204774)
+- Kapoor, S. and Narayanan, A. (2023). Leakage and the reproducibility crisis in
+  machine-learning-based science. *Patterns* 4(9), 100804.
+  [10.1016/j.patter.2023.100804](https://doi.org/10.1016/j.patter.2023.100804)
+- Rosenblatt, M. and others (2024). Data leakage inflates prediction performance in
+  connectome-based machine learning models. *Nature Communications* 15, 1829.
+  [10.1038/s41467-024-46150-w](https://doi.org/10.1038/s41467-024-46150-w)
+- Tkach, D., Huang, H. and Kuiken, T. A. (2010). Study of stability of time-domain
+  features for electromyographic pattern recognition. *Journal of NeuroEngineering and
+  Rehabilitation* 7, 21.
+  [10.1186/1743-0003-7-21](https://doi.org/10.1186/1743-0003-7-21)
+
+Worth reading the Kapoor and Narayanan one if you only read one. They surveyed 294
+papers across 17 fields and found that once the leaks are fixed, complicated models stop
+beating decades old simple ones. I hit the same thing here without knowing their paper
+existed until afterwards.
+
+The dataset itself has no citation, which is the one gap I could not close.
+
 ## Licence
 
 Code under MIT. Writing and figures under CC BY 4.0. The recordings in `data/` are not

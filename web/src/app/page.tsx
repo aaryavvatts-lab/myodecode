@@ -8,11 +8,14 @@ import Leakage from "@/components/Leakage";
 import LiveDecoder from "@/components/LiveDecoder";
 import Methods from "@/components/Methods";
 import Primer from "@/components/Primer";
+import References from "@/components/References";
+import SectionNav from "@/components/SectionNav";
 import SignalExplorer from "@/components/SignalExplorer";
 
 export default function Home() {
   return (
     <main id="main">
+      <SectionNav />
       <Hero />
       <Leakage />
       <SignalExplorer />
@@ -24,6 +27,7 @@ export default function Home() {
       <LatentSpace />
       <LiveDecoder />
       <Methods />
+      <References />
     </main>
   );
 }

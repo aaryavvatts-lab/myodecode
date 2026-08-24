@@ -31,11 +31,11 @@ export default function Primer() {
           <h3 className="mb-3 text-[14px] font-medium">The five numbers the decoder uses</h3>
           <dl className="space-y-3 text-[13px]">
             {[
-              ["Mean absolute value", "how big the signal is on average, ignoring its sign. A rough count of how much muscle is switched on."],
-              ["Root mean square", "signal power. Similar to the one above, but less thrown off by the odd big spike."],
-              ["Waveform length", "how far the line travels up and down in total. Mixes size and speed into one number."],
-              ["Zero crossings", "how often the signal flips from positive to negative. Goes up as firing gets faster, down as the muscle tires."],
-              ["Slope sign changes", "how often the line changes direction. A rough read on how fast the wiggles are."],
+              ["Mean absolute value", "How big the signal is on average, ignoring its sign. A rough count of how much muscle is switched on."],
+              ["Root mean square", "Signal power. Similar to the one above, but less thrown off by the odd big spike."],
+              ["Waveform length", "How far the line travels up and down in total. Mixes size and speed into one number."],
+              ["Zero crossings", "How often the signal flips from positive to negative. Goes up as firing gets faster, down as the muscle tires."],
+              ["Slope sign changes", "How often the line changes direction. A rough read on how fast the wiggles are."],
             ].map(([k, v]) => (
               <div key={k}>
                 <dt className="font-medium">{k}</dt>
