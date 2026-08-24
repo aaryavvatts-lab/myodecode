@@ -25,5 +25,15 @@ function Inner() {
 }
 
 export default function Preview() {
+  // Development aid only: the deployed site has no /preview route.
+  if (process.env.NODE_ENV === "production") {
+    return (
+      <main className="mx-auto max-w-2xl px-5 py-24">
+        <p className="text-[14px]" style={{ color: "var(--text-secondary)" }}>
+          This route is a development aid. Go to <a href="/" className="underline underline-offset-4">the site</a>.
+        </p>
+      </main>
+    );
+  }
   return <Suspense><Inner /></Suspense>;
 }

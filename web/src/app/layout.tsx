@@ -9,7 +9,14 @@ const serif = Newsreader({ subsets: ["latin"], variable: "--font-serif", display
 export const metadata: Metadata = {
   title: "MyoDecode — How fast can you read a hand?",
   description:
-    "Decoding hand gestures from four channels of forearm EMG: how fast, how few electrodes, and how much published accuracy is leakage.",
+    "Decoding hand gestures from four channels of forearm EMG: how fast, how few electrodes, and how much reported accuracy is leakage.",
+  openGraph: {
+    title: "MyoDecode — How fast can you read a hand?",
+    description:
+      "A 1993 feature set beats the CNN, and most of the accuracy everyone reports is an artefact of how the data is split.",
+    type: "website",
+  },
+  twitter: { card: "summary_large_image" },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
