@@ -29,28 +29,30 @@ export default function Electrodes() {
   return (
     <Section
       id="electrodes"
-      eyebrow="04 — Cost"
-      title="How few electrodes can you get away with?"
+      eyebrow="05 · Sensor count"
+      title="How few sensors can you get away with?"
       lede={
         <>
-          Every electrode is money, weight, setup time and one more thing that can fall
-          off mid-use. All fifteen subsets of the four channels, scored leave-one-subject-out
-          at {channels.window_ms} ms.
+          Every sensor costs money and weight, takes time to stick on, and is one more
+          thing that can peel off halfway through. So I tried all fifteen combinations of
+          the four sensors, each tested on a person the model had not seen, using{" "}
+          {channels.window_ms} ms of signal.
         </>
       }
     >
       <div className="grid gap-3 sm:grid-cols-3">
-        <Stat value={pct(full.models.td_lda_znorm.accuracy)} label="All four electrodes" sub="The ceiling" />
-        <Stat value={pct(bestPair.accuracy)} label={`Best two — ch ${bestPair.channels.join(" + ")}`}
-              sub={`Half the hardware, ${((full.models.td_lda_znorm.accuracy - bestPair.accuracy) * 100).toFixed(1)} pp cheaper in accuracy`} tone="accent" />
-        <Stat value={pct(singles[0].models.td_lda_znorm.accuracy)} label={`Best single — ch ${singles[0].channels[0]}`}
-              sub="One electrode, five gestures" />
+        <Stat value={pct(full.models.td_lda_znorm.accuracy)} label="All four sensors" sub="The best you can do here" />
+        <Stat value={pct(bestPair.accuracy)} label={`Best two, sensors ${bestPair.channels.join(" and ")}`}
+              sub={`Half the hardware for ${((full.models.td_lda_znorm.accuracy - bestPair.accuracy) * 100).toFixed(1)} points less accuracy`} tone="accent" />
+        <Stat value={pct(singles[0].models.td_lda_znorm.accuracy)} label={`Best single, sensor ${singles[0].channels[0]}`}
+              sub="One sensor, still telling five gestures apart" />
       </div>
 
       <Card className="mt-6">
-        <h3 className="mb-1 text-[14px] font-medium">Switch electrodes on and off</h3>
+        <h3 className="mb-1 text-[14px] font-medium">Turn sensors on and off</h3>
         <p className="mb-5 text-[13px]" style={{ color: "var(--text-secondary)" }}>
-          Results are precomputed for every subset, so this is a lookup, not an estimate.
+          I trained and tested a separate model for every combination, so these are real
+          measured scores, not guesses from a formula.
         </p>
         <div className="flex flex-wrap gap-2">
           {ALL.map((c) => (
@@ -62,39 +64,39 @@ export default function Electrodes() {
                 : { color: "var(--text-muted)" }}>
               <span className="inline-block h-2.5 w-2.5 rounded-full"
                     style={{ background: on.includes(c) ? "currentColor" : "var(--border-strong)" }} />
-              Channel {c}
+              Sensor {c}
             </button>
           ))}
         </div>
 
         <div className="mt-6 flex flex-wrap items-baseline gap-x-4 gap-y-2">
           <div className="tnum font-[family-name:var(--font-mono)] text-5xl" style={{ color: "var(--accent)" }}>
-            {current ? pct(current.models.td_lda_znorm.accuracy) : "—"}
+            {current ? pct(current.models.td_lda_znorm.accuracy) : "n/a"}
           </div>
           <div className="text-[14px]" style={{ color: "var(--text-secondary)" }}>
             {on.length === 0
-              ? "Turn at least one electrode on."
-              : <>with {on.length} electrode{on.length > 1 ? "s" : ""} ({on.map((c) => `ch${c}`).join(", ")}),
-                 on a person the model has never seen</>}
+              ? "Turn at least one sensor on."
+              : <>using {on.length} sensor{on.length > 1 ? "s" : ""} ({on.map((c) => `#${c}`).join(", ")}),
+                 tested on a person the model has never seen</>}
           </div>
         </div>
         {current && on.length > 0 && on.length < 4 && (
           <p className="mt-2 text-[13px]" style={{ color: "var(--text-muted)" }}>
-            {((full.models.td_lda_znorm.accuracy - current.models.td_lda_znorm.accuracy) * 100).toFixed(1)} pp
-            below the full four-electrode array.
+            That is {((full.models.td_lda_znorm.accuracy - current.models.td_lda_znorm.accuracy) * 100).toFixed(1)} points
+            below using all four.
           </p>
         )}
       </Card>
 
       <div className="mt-4 grid gap-4 lg:grid-cols-2">
         <Card>
-          <h3 className="mb-4 text-[14px] font-medium">The frontier</h3>
+          <h3 className="mb-4 text-[14px] font-medium">Best you can do with each number of sensors</h3>
           <div className="space-y-2.5">
             {[1, 2, 3, 4].map((n) => {
               const f = frontier[String(n)];
               return (
                 <div key={n} className="grid grid-cols-[5.4rem_1fr_4.2rem_3.4rem] items-center gap-2">
-                  <span className="text-[13px]">{n} electrode{n > 1 ? "s" : ""}</span>
+                  <span className="text-[13px]">{n} sensor{n > 1 ? "s" : ""}</span>
                   <div className="h-6 rounded-[4px]" style={{ background: "var(--surface-2)" }}>
                     <div className="h-full rounded-[4px]"
                          style={{ width: `${f.accuracy * 100}%`, background: sequentialColor(0.3 + n * 0.17) }} />
@@ -109,14 +111,15 @@ export default function Electrodes() {
             })}
           </div>
           <p className="mt-4 text-[12px] leading-relaxed" style={{ color: "var(--text-muted)" }}>
-            Going from two electrodes to four buys{" "}
-            {((frontier["4"].accuracy - frontier["2"].accuracy) * 100).toFixed(1)} pp. Whether that
-            is worth doubling the hardware is a product decision, not a modelling one.
+            Going from two sensors to four gains you{" "}
+            {((frontier["4"].accuracy - frontier["2"].accuracy) * 100).toFixed(1)} points.
+            Whether that is worth doubling the hardware is a decision about the product,
+            not about the model.
           </p>
         </Card>
 
         <Card>
-          <h3 className="mb-4 text-[14px] font-medium">What each electrode knows alone</h3>
+          <h3 className="mb-4 text-[14px] font-medium">What each sensor can do by itself</h3>
           <div className="space-y-2.5">
             {singles.map((s) => (
               <div key={s.channels[0]} className="grid grid-cols-[5.4rem_1fr_3.4rem] items-center gap-2">
@@ -132,29 +135,31 @@ export default function Electrodes() {
             ))}
           </div>
           <p className="mt-4 text-[12px] leading-relaxed" style={{ color: "var(--text-muted)" }}>
-            The best pair is not simply the two best singles — electrodes are worth more
-            when they disagree. Chance with five classes is 20%.
+            The best pair is not just the two best singles put together. Sensors are worth
+            more when they disagree with each other than when they say the same thing.
+            Guessing at random would score 20%.
           </p>
         </Card>
       </div>
 
       <Card className="mt-4">
-        <h3 className="mb-1 text-[14px] font-medium">Both budgets at once</h3>
+        <h3 className="mb-1 text-[14px] font-medium">Speed and sensor count together</h3>
         <p className="mb-4 text-[13px]" style={{ color: "var(--text-secondary)" }}>
-          Best subset of each size at each window length. Darker is more accurate.
+          The best combination of each size, at each amount of signal. Darker means more
+          accurate. Use it to find the cheapest setup that hits the score you need.
         </p>
         <Heatmap />
         <div className="mt-5 grid gap-2 sm:grid-cols-2">
           {Object.entries(tradeoff.targets as Record<string, { fewest_electrodes: { n_channels: number; window_ms: number; channels: number[] }; lowest_latency: { n_channels: number; window_ms: number; channels: number[] } } | null>)
             .map(([t, v]) => (
               <div key={t} className="rounded-lg border p-3 text-[13px]" style={{ background: "var(--surface-2)" }}>
-                <span className="font-medium">To reach {pct(Number(t), 0)}</span>
+                <span className="font-medium">To hit {pct(Number(t), 0)}</span>
                 {v ? (
                   <ul className="mt-1 space-y-0.5" style={{ color: "var(--text-secondary)" }}>
-                    <li>cheapest: {v.fewest_electrodes.n_channels} electrode{v.fewest_electrodes.n_channels > 1 ? "s" : ""} (ch {v.fewest_electrodes.channels.join("+")}) at {v.fewest_electrodes.window_ms} ms</li>
-                    <li>fastest: {v.lowest_latency.window_ms} ms with {v.lowest_latency.n_channels} electrode{v.lowest_latency.n_channels > 1 ? "s" : ""} (ch {v.lowest_latency.channels.join("+")})</li>
+                    <li>Fewest sensors: {v.fewest_electrodes.n_channels} (numbers {v.fewest_electrodes.channels.join(" and ")}), using {v.fewest_electrodes.window_ms} ms</li>
+                    <li>Fastest: {v.lowest_latency.window_ms} ms, needing {v.lowest_latency.n_channels} sensor{v.lowest_latency.n_channels > 1 ? "s" : ""} (numbers {v.lowest_latency.channels.join(" and ")})</li>
                   </ul>
-                ) : <p className="mt-1" style={{ color: "var(--text-muted)" }}>not reachable with this dataset</p>}
+                ) : <p className="mt-1" style={{ color: "var(--text-muted)" }}>Not reachable with this data.</p>}
               </div>
             ))}
         </div>
@@ -216,12 +221,12 @@ function Heatmap() {
           ))}
         </div>
         <div className="mt-2 pl-[2.6rem] text-center text-[11px]" style={{ color: "var(--text-muted)" }}>
-          window length (ms)
+          length of signal used (ms)
         </div>
       </div>
       <TableView
-        headers={["Window (ms)", "Electrodes", "Best subset", "LOSO accuracy"]}
-        rows={cells.map((c) => [c.window_ms, c.n_channels, `ch ${c.channels.join("+")}`, pct(c.accuracy, 2)])}
+        headers={["Signal used (ms)", "Sensors", "Which ones", "Accuracy on a new person"]}
+        rows={cells.map((c) => [c.window_ms, c.n_channels, c.channels.join(", "), pct(c.accuracy, 2)])}
       />
     </div>
   );

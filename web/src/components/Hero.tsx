@@ -73,26 +73,29 @@ export default function Hero() {
       <div className="relative mx-auto max-w-5xl px-5 pb-16 pt-20 sm:pb-24 sm:pt-28">
         <p className="mb-5 font-[family-name:var(--font-mono)] text-[11px] uppercase tracking-[0.2em]"
            style={{ color: "var(--text-muted)" }}>
-          Surface EMG · 8 subjects · 4 electrodes · 5 gestures
+          Muscle signals · 8 people · 4 sensors · 5 gestures
         </p>
         <h1 className="max-w-3xl text-balance font-[family-name:var(--font-serif)] text-5xl leading-[1.03] tracking-tight sm:text-7xl">
           How fast can you read a hand?
         </h1>
         <p className="mt-6 max-w-2xl text-[17px] leading-relaxed" style={{ color: "var(--text-secondary)" }}>
-          Muscles leak electricity when they contract. With four electrodes on a forearm you
-          can tell which of five gestures someone is making. The interesting question is not
-          whether that works — it does, and has since 1993. It is{" "}
-          <em>how quickly</em>, with <em>how little hardware</em>, and{" "}
-          <em>how much of the accuracy everyone reports is an artefact of how they split
-          their data</em>.
+          Your muscles give off a small electrical signal when they tighten. Stick four
+          sensors on a forearm and you can work out which of five hand gestures someone
+          is making. That part already works, and it has worked since 1993.
+        </p>
+        <p className="mt-4 max-w-2xl text-[17px] leading-relaxed" style={{ color: "var(--text-secondary)" }}>
+          So I asked better questions. How fast can it decide? How few sensors does it
+          need? And how much of the accuracy people report for this task is real, versus
+          an artifact of how they split their data? The last one turned out to matter
+          most.
         </p>
 
         <div className="mt-10 grid max-w-3xl gap-px overflow-hidden rounded-xl border sm:grid-cols-3"
              style={{ background: "var(--border)" }}>
           {[
-            { v: pct(leaky.accuracy), l: "reported by the naive recipe", tone: "var(--warn)" },
-            { v: pct(honest.accuracy), l: "on a person it has never seen", tone: "var(--accent)" },
-            { v: `${knee.knee_window_ms} ms`, l: "of muscle needed to decide", tone: "var(--text-primary)" },
+            { v: pct(leaky.accuracy), l: "what the popular method reports", tone: "var(--warn)" },
+            { v: pct(honest.accuracy), l: "what it gets on a new person", tone: "var(--accent)" },
+            { v: `${knee.knee_window_ms} ms`, l: "of signal it needs to decide", tone: "var(--text-primary)" },
           ].map((s) => (
             <div key={s.l} className="p-5" style={{ background: "var(--surface-0)" }}>
               <div className="tnum font-[family-name:var(--font-mono)] text-3xl leading-none" style={{ color: s.tone }}>
@@ -105,9 +108,10 @@ export default function Hero() {
 
         <nav className="mt-10 flex flex-wrap gap-x-5 gap-y-2 text-[13px]">
           {[
-            ["The trap", "leakage"], ["The data", "data"], ["Latency", "latency"],
-            ["Electrode cost", "electrodes"], ["What it learned", "latent"],
-            ["Live decoder", "live"], ["Methods", "methods"],
+            ["The catch", "leakage"], ["The data", "data"], ["How it works", "primer"],
+            ["Speed", "latency"], ["Sensor count", "electrodes"], ["Setup", "calibration"],
+            ["Mistakes", "confusion"], ["Inside the model", "latent"],
+            ["Try it", "live"], ["Methods", "methods"],
           ].map(([label, id]) => (
             <a key={id} href={`#${id}`} className="focusable underline underline-offset-4 hover:opacity-70"
                style={{ color: "var(--text-secondary)" }}>{label}</a>

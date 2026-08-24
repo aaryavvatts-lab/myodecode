@@ -8,10 +8,10 @@ import { GESTURE_COLORS } from "@/lib/palette";
 import { pct } from "@/lib/format";
 
 const MODELS = [
-  { key: "td_lda_znorm", name: "Features + LDA (normalised)" },
-  { key: "td_lda", name: "Features + LDA" },
-  { key: "cnn_latent_logreg", name: "CNN latent + logistic" },
-  { key: "cnn_e2e", name: "CNN end-to-end" },
+  { key: "td_lda_znorm", name: "1993 measurements, rescaled" },
+  { key: "td_lda", name: "1993 measurements" },
+  { key: "cnn_latent_logreg", name: "Neural net, then classifier" },
+  { key: "cnn_e2e", name: "Neural net, end to end" },
 ] as const;
 
 export default function Latency() {
@@ -44,54 +44,55 @@ export default function Latency() {
   return (
     <Section
       id="latency"
-      eyebrow="03 — Latency"
+      eyebrow="04 · Speed"
       title="How fast can you read a hand?"
       lede={
         <>
-          A decoder that needs a full second of muscle activity is useless for controlling
-          anything. Every point is leave-one-subject-out, and the hop between windows is
-          held fixed across the sweep, so the curve reflects window length alone rather
-          than how much training data each setting happened to produce.
+          If a decoder needs a full second of muscle activity before it answers, it is no
+          good for controlling anything. Every point here is tested on a person the model
+          has not seen. I also kept the step between windows fixed, so each setting trains
+          on the same amount of data and the curve shows the effect of window length on
+          its own.
         </>
       }
     >
       <div className="grid gap-3 sm:grid-cols-3">
-        <Stat value={`${best.knee_window_ms} ms`} label="The knee"
-              sub={`Shortest window within 1 pp of peak (${pct(best.peak_accuracy)})`} tone="accent" />
-        <Stat value={pct(sweep[0].models.td_lda_znorm.accuracy)} label={`At ${sweep[0].window_ms} ms`}
-              sub="Even a single blink of muscle carries signal" />
+        <Stat value={`${best.knee_window_ms} ms`} label="Sweet spot"
+              sub={`Shortest window still within 1 point of the best score (${pct(best.peak_accuracy)})`} tone="accent" />
+        <Stat value={pct(sweep[0].models.td_lda_znorm.accuracy)} label={`With only ${sweep[0].window_ms} ms`}
+              sub="Even a flicker of muscle activity carries something" />
         <Stat value={`${kneeRow.timing.td_features_ms.toFixed(2)} ms`} label="Compute per decode"
-              sub={`Features + linear model at ${best.knee_window_ms} ms, one core`} />
+              sub={`Measuring and classifying at ${best.knee_window_ms} ms, on one core`} />
       </div>
 
       <Card className="mt-6">
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-          <h3 className="text-[14px] font-medium">Accuracy against decision latency</h3>
+          <h3 className="text-[14px] font-medium">Accuracy against how long you wait</h3>
           <Toggle value={xAxis} onChange={setXAxis} label="x-axis"
-                  options={[{ value: "window", label: "Window only" },
-                            { value: "endtoend", label: "+ compute" }]} />
+                  options={[{ value: "window", label: "Wait only" },
+                            { value: "endtoend", label: "Plus compute" }]} />
         </div>
         <LineChart
           series={series}
           height={340}
           yDomain={[0.74, 1.0]}
-          xLabel={xAxis === "window" ? "Window length (ms, log scale)" : "End-to-end latency (ms, log scale)"}
-          yLabel="LOSO accuracy"
+          xLabel={xAxis === "window" ? "Length of signal used (ms)" : "Total time before an answer (ms)"}
+          yLabel="Accuracy on a new person"
           logScale
           xTicks={[25, 50, 100, 200, 400, 1000]}
           fmtX={(v) => String(Math.round(v))}
           fmtY={(v) => `${Math.round(v * 100)}%`}
           fmtTipX={(v) => `${Math.round(v)} ms`}
           fmtTipY={(v) => pct(v, 1)}
-          annotations={[{ x: best.knee_window_ms, label: `knee ${best.knee_window_ms} ms` }]}
+          annotations={[{ x: best.knee_window_ms, label: `sweet spot, ${best.knee_window_ms} ms` }]}
         />
         <p className="mt-3 text-[12px] leading-relaxed" style={{ color: "var(--text-muted)" }}>
-          Shaded bands are bootstrap 95% confidence intervals over the eight subjects. They
-          are wide because eight people is not many — that width is the honest uncertainty,
-          not noise to be smoothed away.
+          The shaded bands show how much the score moves depending on which people you
+          test on. They are wide because eight people is not many. That width is real
+          uncertainty, so I left it in rather than hiding it.
         </p>
         <TableView
-          headers={["Window (ms)", "Features+LDA (norm.)", "Features+LDA", "CNN latent", "CNN e2e", "Compute (ms)"]}
+          headers={["Signal used (ms)", "1993, rescaled", "1993", "Net + classifier", "Net, end to end", "Compute (ms)"]}
           rows={sweep.map((r) => [
             r.window_ms,
             pct(r.models.td_lda_znorm.accuracy, 2),
@@ -104,24 +105,25 @@ export default function Latency() {
       </Card>
 
       <Card className="mt-4">
-        <h3 className="mb-3 text-[14px] font-medium">Pick a latency budget</h3>
+        <h3 className="mb-3 text-[14px] font-medium">Pick how long you are willing to wait</h3>
         <input
           type="range" min={0} max={sweep.length - 1} value={pick}
           onChange={(e) => setPick(Number(e.target.value))}
           className="focusable w-full accent-[var(--accent)]"
-          aria-label="Window length"
+          aria-label="Length of signal used"
         />
         <div className="mt-4 grid gap-4 sm:grid-cols-[auto_1fr] sm:items-center">
           <div className="tnum font-[family-name:var(--font-mono)] text-4xl" style={{ color: "var(--accent)" }}>
             {row.window_ms}<span className="text-xl"> ms</span>
           </div>
           <p className="text-[14px] leading-relaxed" style={{ color: "var(--text-secondary)" }}>
-            A decision every <strong style={{ color: "var(--text-primary)" }}>{row.window_ms} ms</strong>{" "}
+            An answer every <strong style={{ color: "var(--text-primary)" }}>{row.window_ms} ms</strong>{" "}
             <Inferred>assumes 1 kHz</Inferred>, at{" "}
             <strong style={{ color: "var(--text-primary)" }}>{pct(row.models.td_lda_znorm.accuracy)}</strong>{" "}
-            accuracy on a person the model has never seen. Computing it takes{" "}
-            {row.timing.td_features_ms.toFixed(2)} ms, so the window is{" "}
-            {Math.round(row.window_ms / row.timing.td_features_ms)}× more expensive than the maths.
+            accuracy on someone the model has never seen. The maths takes{" "}
+            {row.timing.td_features_ms.toFixed(2)} ms, so waiting for the signal costs{" "}
+            {Math.round(row.window_ms / row.timing.td_features_ms)} times more time than
+            the computing does. Speed here is about biology, not hardware.
           </p>
         </div>
       </Card>

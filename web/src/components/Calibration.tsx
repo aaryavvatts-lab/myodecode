@@ -14,23 +14,24 @@ export default function Calibration() {
   const s = calibration.summary;
 
   const series = [
-    { name: "With free unlabelled normalisation", color: c[1],
+    { name: "With the free rescaling step", color: c[1],
       points: withN.map((r) => ({ x: r.seconds, y: r.accuracy, lo: r.accuracy_ci[0], hi: r.accuracy_ci[1] })) },
-    { name: "Without normalisation", color: c[3], dashed: true,
+    { name: "Without it", color: c[3], dashed: true,
       points: without.map((r) => ({ x: r.seconds, y: r.accuracy, lo: r.accuracy_ci[0], hi: r.accuracy_ci[1] })) },
   ];
 
   return (
     <Section
       id="calibration"
-      eyebrow="04b — Setup cost"
-      title="Should you make people do a calibration routine?"
+      eyebrow="06 · Setup"
+      title="Should you make people do a setup routine?"
       lede={
         <>
-          Asking a new wearer to hold each gesture for a few seconds is the standard fix for
-          person-to-person variation. It is also the most annoying part of owning such a
-          device. So: what does it actually buy, on top of simply standardising the signal
-          against itself — which costs nothing and needs no labels at all?
+          The usual fix for people being different is to ask each new user to hold every
+          gesture for a few seconds while the device learns their arm. It is also the most
+          annoying part of owning one. So I checked what that actually buys you, compared
+          with just rescaling the signal against itself, which is free and needs nobody to
+          hold anything.
         </>
       }
     >
@@ -39,16 +40,16 @@ export default function Calibration() {
           series={series}
           height={300}
           yDomain={[0.88, 1.0]}
-          xLabel="Seconds of labelled calibration data from the new wearer"
-          yLabel="LOSO accuracy"
+          xLabel="Seconds the new user spends holding gestures"
+          yLabel="Accuracy on a new person"
           xTicks={withN.map((r) => r.seconds)}
           fmtX={(v) => String(v)}
           fmtY={(v) => `${(v * 100).toFixed(0)}%`}
-          fmtTipX={(v) => (v === 0 ? "no calibration" : `${v} s total (${(v / 5).toFixed(1)} s per gesture)`)}
+          fmtTipX={(v) => (v === 0 ? "no setup at all" : `${v} s total, ${(v / 5).toFixed(1)} s per gesture`)}
           fmtTipY={(v) => pct(v, 2)}
         />
         <TableView
-          headers={["Calibration (s)", "Per gesture (s)", "With normalisation", "Without"]}
+          headers={["Setup time (s)", "Per gesture (s)", "With rescaling", "Without"]}
           rows={withN.map((r, i) => [
             r.seconds, (r.seconds / 5).toFixed(1), pct(r.accuracy, 2), pct(without[i].accuracy, 2),
           ])}
@@ -58,20 +59,20 @@ export default function Calibration() {
       <Card className="mt-4">
         <h3 className="mb-1 text-[14px] font-medium">The answer is no</h3>
         <p className="text-[13px] leading-relaxed" style={{ color: "var(--text-secondary)" }}>
-          Standardising each wearer's features against their own unlabelled signal — free,
-          instant, no cooperation required — is worth{" "}
+          Rescaling each person's measurements against their own signal costs nothing,
+          happens instantly, and needs no help from the user. It is worth{" "}
           <strong style={{ color: "var(--text-primary)" }}>
             {((s.with_free_normalisation.zero_shot - s.without_normalisation.zero_shot) * 100).toFixed(1)} pp
           </strong>{" "}
           ({pct(s.without_normalisation.zero_shot)} → {pct(s.with_free_normalisation.zero_shot)}).
-          Adding up to twelve seconds of labelled calibration on top of that is worth a
-          further{" "}
+          Adding up to twelve seconds of the user holding poses on top of that is worth
+          another{" "}
           <strong style={{ color: "var(--text-primary)" }}>
             {(s.with_free_normalisation.gain * 100).toFixed(1)} pp
           </strong>{" "}
-          — well inside the confidence interval, i.e. indistinguishable from nothing.
-          Calibration only earns its keep when you skip the free normalisation, and then it
-          is merely recovering ground you gave away.
+          , which is well inside the noise. In other words, nothing you could measure.
+          The setup routine only looks useful if you skipped the free step first, and even
+          then it is just winning back ground you gave away.
         </p>
       </Card>
     </Section>

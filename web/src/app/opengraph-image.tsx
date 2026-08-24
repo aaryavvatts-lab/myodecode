@@ -4,7 +4,7 @@ import leakage from "@/results/leakage.json";
 export const runtime = "nodejs";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
-export const alt = "MyoDecode — how fast can you read a hand?";
+export const alt = "MyoDecode: how fast can you read a hand?";
 
 export default function OG() {
   const leaky = leakage.ladder.find((e) => e.scheme === "random_within" && e.model === "td_lda")!;

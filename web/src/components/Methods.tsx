@@ -8,20 +8,20 @@ export default function Methods() {
   return (
     <Section
       id="methods"
-      eyebrow="07 — Methods"
-      title="What was done, and what is not known"
-      lede="Including the parts that weaken the result. A number without its caveats is advertising."
+      eyebrow="10 · Methods"
+      title="What I did, and what I do not know"
+      lede="Including the parts that make the result weaker. A number without its caveats is just advertising."
     >
       <div className="grid gap-4 lg:grid-cols-2">
         <Card>
           <h3 className="mb-3 text-[14px] font-medium">Pipeline</h3>
           <ol className="list-inside list-decimal space-y-2 text-[13px]" style={{ color: "var(--text-secondary)" }}>
-            <li>Zero-phase Butterworth bandpass, 20–450 Hz, plus notches at 60 Hz and harmonics.</li>
-            <li>Sliding windows tagged with subject, class and position in the recording, so splits can be blocked in time.</li>
-            <li>Five time-domain features per channel: MAV, RMS, waveform length, zero crossings, slope sign changes.</li>
-            <li>Linear discriminant analysis with automatic shrinkage; a 53k-parameter 1-D CNN encoder as the learned comparison.</li>
-            <li>Leave-one-subject-out across all eight subjects; bootstrap 95% intervals over folds; {leakage.permutation.n}-run label permutation test for the null.</li>
-            <li>The window-length sweep uses a fixed {latency.stride_samples}-sample hop so every setting trains on the same number of windows.</li>
+            <li>Filter the signal to keep 20 to 450 Hz, and notch out mains hum at 60 Hz and its harmonics. The filter runs forwards and backwards so it does not shift anything in time.</li>
+            <li>Cut the recordings into overlapping windows, each tagged with who it came from, which gesture, and where in the recording it sits. That last tag is what makes the time-based split possible.</li>
+            <li>Take five measurements per sensor: mean absolute value, root mean square, waveform length, zero crossings, slope sign changes.</li>
+            <li>Classify with linear discriminant analysis, with shrinkage picked automatically. Compare against a small neural network with about 53,000 weights.</li>
+            <li>Test on every person in turn while holding them out of training. Get the uncertainty by resampling across people. Check the floor by scrambling the labels {leakage.permutation.n} times.</li>
+            <li>For the speed sweep, keep the step between windows fixed at {latency.stride_samples} samples, so every setting trains on the same amount of data.</li>
           </ol>
         </Card>
 
@@ -34,10 +34,11 @@ export default function Methods() {
               one or two points as unresolved.
             </li>
             <li>
-              <strong style={{ color: "var(--text-primary)" }}>The sampling rate is inferred.</strong>
-              <Inferred /> It was estimated at 1 kHz from the power spectrum — the EMG peak sits at
-              ~92 Hz in normalised frequency and content dies by ~450 Hz. If the true rate differs,
-              every millisecond figure rescales proportionally. No accuracy result depends on it.
+              <strong style={{ color: "var(--text-primary)" }}>I had to work out the sampling rate.</strong>
+              <Inferred /> The files did not say. I estimated about 1000 samples a second from
+              the frequency content, which peaks near 92 Hz and fades out by 450 Hz. That is
+              what muscle signal looks like at that rate. If the real rate is different, every
+              millisecond number here scales by the same factor. No accuracy score depends on it.
             </li>
             <li>
               <strong style={{ color: "var(--text-primary)" }}>The gestures have no names.</strong>
@@ -46,15 +47,16 @@ export default function Methods() {
               names like &ldquo;fist&rdquo; or &ldquo;pinch&rdquo;.
             </li>
             <li>
-              <strong style={{ color: "var(--text-primary)" }}>One session per person.</strong>{" "}
-              Electrodes were never removed and reapplied, so nothing here measures the
-              across-session drift that breaks real devices. Expect worse.
+              <strong style={{ color: "var(--text-primary)" }}>One sitting per person.</strong>{" "}
+              The sensors were never peeled off and stuck back on. In a real device that
+              happens every day, and it is one of the main things that breaks them. Nothing
+              here measures that, so expect worse in practice.
             </li>
             <li>
-              <strong style={{ color: "var(--text-primary)" }}>Provenance is unresolved.</strong>{" "}
-              The source publication for this dataset was not available, and searching did not
-              identify it. Electrode placement is therefore unknown; channels are referred to
-              by number only.
+              <strong style={{ color: "var(--text-primary)" }}>I do not know where the data came from.</strong>{" "}
+              There was no paper with it and searching did not turn one up. That means I do
+              not know where on the arm the sensors were placed, which is why I only ever
+              call them by number.
             </li>
           </ul>
         </Card>
@@ -63,10 +65,11 @@ export default function Methods() {
       <Card className="mt-4">
         <h3 className="mb-3 text-[14px] font-medium">Reproducing this</h3>
         <p className="mb-3 text-[13px]" style={{ color: "var(--text-secondary)" }}>
-          Every number and figure regenerates from the raw text files with fixed seeds. The
-          test suite asserts the load-bearing claims directly: that permuted labels score at
-          chance, that leave-one-subject-out folds share no subject, that the blocked split
-          has a real temporal gap, and that the leaky split beats the honest one.
+          Every number and chart on this site rebuilds from the raw text files, with the
+          random seeds fixed so you get the same answers I did. The tests check the claims
+          this project rests on: that scrambled labels score at chance, that no person
+          appears in both training and testing, that the time-based split really has a gap
+          in it, and that the shortcut split really does beat the honest one.
         </p>
         <pre className="scroll-x rounded-lg border p-3 font-[family-name:var(--font-mono)] text-[12px] leading-relaxed"
              style={{ background: "var(--surface-2)" }}>
@@ -77,8 +80,8 @@ uv pip install --python .venv/bin/python -r requirements.txt
 .venv/bin/python run_all.py`}
         </pre>
         <p className="mt-4 text-[12px]" style={{ color: "var(--text-muted)" }}>
-          Built with an EMG dataset of 8 subjects × 5 gestures × 4 channels. Source and full
-          results: <a href={REPO} className="underline underline-offset-4" style={{ color: "var(--accent)" }}>{REPO.replace("https://", "")}</a>
+          Built from muscle recordings of 8 people, 5 gestures each, 4 sensors. Code and
+          full results: <a href={REPO} className="underline underline-offset-4" style={{ color: "var(--accent)" }}>{REPO.replace("https://", "")}</a>
         </p>
       </Card>
     </Section>

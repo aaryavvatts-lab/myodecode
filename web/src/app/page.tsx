@@ -12,7 +12,7 @@ import SignalExplorer from "@/components/SignalExplorer";
 
 export default function Home() {
   return (
-    <main>
+    <main id="main">
       <Hero />
       <Leakage />
       <SignalExplorer />
@@ -24,12 +24,6 @@ export default function Home() {
       <LatentSpace />
       <LiveDecoder />
       <Methods />
-      <footer className="border-t py-10">
-        <div className="mx-auto max-w-5xl px-5 text-[12px]" style={{ color: "var(--text-muted)" }}>
-          MyoDecode — decoding hand gestures from four channels of forearm EMG.
-          All accuracies are leave-one-subject-out unless stated otherwise.
-        </div>
-      </footer>
     </main>
   );
 }

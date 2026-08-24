@@ -75,14 +75,14 @@ export default function SignalExplorer() {
   return (
     <Section
       id="data"
-      eyebrow="02 — The data"
-      title="Four electrodes, eight people, five things a hand can do"
+      eyebrow="02 · The data"
+      title="Four sensors, eight people, five things a hand can do"
       lede={
         <>
-          Forty recordings of about twenty seconds each, sampled at 1&nbsp;kHz<Inferred />.
-          The dataset ships no gesture names, so each class is described by what its
-          muscles actually do. Class&nbsp;0 is near-silent on every channel in every
-          subject, which is why it is called Rest.
+          Forty recordings, each about twenty seconds long, sampled a thousand times a
+          second<Inferred />. The files came with no gesture names, so I describe each
+          one by what the muscles actually did. Class 0 is close to silent on all four
+          sensors for every person, which is why I call it Rest.
         </>
       }
     >
@@ -111,12 +111,12 @@ export default function SignalExplorer() {
             <span className="font-medium" style={{ color: "var(--text-primary)" }}>
               {sig?.class_labels[String(cls)]}
             </span>{" "}
-            — {sigInfo.note}; total activation{" "}
+. {sigInfo.note}. Overall muscle activity is{" "}
             <span className="tnum font-[family-name:var(--font-mono)]">{sigInfo.total.toFixed(2)}×</span>{" "}
-            the subject average
+            the average for that person
             {sigInfo.dominant && (
-              <>, led by channel <span className="font-[family-name:var(--font-mono)]">{sigInfo.dominant}</span>{" "}
-                — the same channel in all eight subjects</>
+              <>, and sensor <span className="font-[family-name:var(--font-mono)]">{sigInfo.dominant}</span>{" "}
+                leads. That is the same sensor in all eight people</>
             )}.
           </p>
         )}
@@ -150,13 +150,13 @@ export default function SignalExplorer() {
         )}
 
         <p className="mt-5 text-[12px] leading-relaxed" style={{ color: "var(--text-muted)" }}>
-          <strong style={{ color: "var(--text-secondary)" }}>Raw</strong> scales each channel
-          independently so its waveform shape stays visible.{" "}
-          <strong style={{ color: "var(--text-secondary)" }}>Envelope</strong> rectifies and
-          smooths, and shares one scale across all four channels — that view is where the
-          gesture&apos;s signature is legible, because it is the <em>ratio</em> between
-          channels, not any single one, that identifies the gesture. Absolute amplitudes
-          differ several-fold between people, which is exactly what the decoder must survive.
+          <strong style={{ color: "var(--text-secondary)" }}>Raw</strong> scales each sensor
+          on its own so you can see the shape of the wave.{" "}
+          <strong style={{ color: "var(--text-secondary)" }}>Envelope</strong> flips the
+          negative half up and smooths it, and puts all four sensors on one shared scale.
+          Use the envelope view to spot a gesture. What identifies a gesture is the
+          balance between sensors, not how loud any single one is. The raw loudness varies
+          a lot from person to person, and that is the thing a decoder has to cope with.
         </p>
       </Card>
     </Section>

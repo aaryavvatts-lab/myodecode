@@ -57,7 +57,7 @@ function Scatter({ pts, colorBy, gesture, subject, mode }: {
   return (
     <div ref={ref} className="w-full">
       <svg width="100%" height={h} viewBox={`0 0 ${W} ${h}`} role="img"
-           aria-label={`Two-dimensional projection coloured by ${colorBy}`}>
+           aria-label={`Flattened two-dimensional view, coloured by ${colorBy}`}>
         <rect width={W} height={h} rx={8} fill="var(--surface-2)" />
         {pts.map((p, i) => (
           <Marker key={i}
@@ -96,14 +96,15 @@ export default function LatentSpace() {
   return (
     <Section
       id="latent"
-      eyebrow="05 — Representation"
+      eyebrow="08 · Inside the model"
       title="Did it learn gestures, or did it learn people?"
       lede={
         <>
-          A decoder that generalises should organise its internal representation by what the
-          hand is doing and stay indifferent to whose arm it is on. Colour the same projection
-          two ways and the answer is visible. Silhouette score makes it a number: high by
-          gesture is the goal, high by subject means capacity is going into memorising wearers.
+          If a decoder is going to work on a stranger, what it stores internally should be
+          sorted by what the hand is doing, not by whose arm it is on. Below is the same
+          picture coloured two ways. There is also a score for it. High when coloured by
+          gesture is good. High when coloured by person means the model is spending its
+          effort memorising individual people.
         </>
       }
     >
@@ -112,19 +113,19 @@ export default function LatentSpace() {
       ) : (
         <>
           <div className="grid gap-3 sm:grid-cols-3">
-            <Stat value={sil!.by_gesture.toFixed(3)} label="Silhouette by gesture" sub="Higher is better" tone="accent" />
-            <Stat value={sil!.by_subject.toFixed(3)} label="Silhouette by subject" sub="Lower is better" />
-            <Stat value={(sil!.by_gesture - sil!.by_subject).toFixed(3)} label="Margin"
-                  sub="How much more it cares about the gesture than the wearer" />
+            <Stat value={sil!.by_gesture.toFixed(3)} label="Grouped by gesture" sub="Higher is better" tone="accent" />
+            <Stat value={sil!.by_subject.toFixed(3)} label="Grouped by person" sub="Lower is better" />
+            <Stat value={(sil!.by_gesture - sil!.by_subject).toFixed(3)} label="Gap between them"
+                  sub="How much more it cares about the gesture than the person" />
           </div>
 
           <Card className="mt-6">
             <div className="mb-4 flex flex-wrap items-center gap-4">
               <Toggle label="Space" value={space} onChange={setSpace}
-                      options={[{ value: "cnn_latent", label: "CNN latent (64-d)" },
-                                { value: "td_features", label: "Hand-crafted features (20-d)" }]} />
+                      options={[{ value: "cnn_latent", label: "What the neural net stores" },
+                                { value: "td_features", label: "The 20 simple measurements" }]} />
               <Toggle label="Colour by" value={colorBy} onChange={setColorBy}
-                      options={[{ value: "gesture", label: "Gesture" }, { value: "subject", label: "Subject" }]} />
+                      options={[{ value: "gesture", label: "Gesture" }, { value: "subject", label: "Person" }]} />
             </div>
 
             <Scatter pts={d.points.projections[space]} colorBy={colorBy}
@@ -143,25 +144,27 @@ export default function LatentSpace() {
               </div>
             ) : (
               <p className="mt-3 text-[12px]" style={{ color: "var(--text-secondary)" }}>
-                Shaded light to dark by subject 1–8. If the points formed eight clean blobs
-                here, the representation would be about people rather than hands.
+                Shaded light to dark for people 1 through 8. If these formed eight tidy
+                blobs, the model would be sorting by person rather than by gesture. They
+                do not, which is the point.
               </p>
             )}
 
             <p className="mt-4 text-[12px] leading-relaxed" style={{ color: "var(--text-muted)" }}>
-              UMAP projection of {d.points.gesture.length.toLocaleString()} windows, each
-              embedded by the model that had that subject held out. The projection is for
-              looking at; the silhouette scores are computed in the full-dimensional space,
-              not on these two axes.
+              This flattens {d.points.gesture.length.toLocaleString()} windows down to two
+              dimensions so they fit on a screen. Each person was run through the model
+              that had never trained on them. The flattening is only for looking at. The
+              scores above are worked out in the full space, not from these two axes.
             </p>
           </Card>
 
           <Card className="mt-4">
             <p className="text-[13px] leading-relaxed" style={{ color: "var(--text-secondary)" }}>
-              Both representations separate gestures far more strongly than they separate
-              people, which is why leave-one-subject-out accuracy holds up at all. Notice
-              that the twenty hand-crafted numbers do about as well as the sixty-four learned
-              ones — the encoder is not finding structure the feature set missed.
+              Both versions sort gestures much more strongly than they sort people, which
+              is why the scores hold up on someone new at all. Worth noticing that the
+              twenty numbers I calculated by hand do about as well as the sixty-four the
+              network learned. The network is not finding anything the simple measurements
+              missed.
             </p>
           </Card>
         </>

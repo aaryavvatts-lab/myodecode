@@ -10,23 +10,23 @@ type Entry = (typeof leakage.ladder)[number];
 
 const ORDER: { scheme: string; model: string; title: string; blurb: string; honest: boolean }[] = [
   {
-    scheme: "random_within", model: "td_lda", title: "Random split, one person",
-    blurb: "Shuffle one subject's windows, hold out 20%. Train and test windows sit milliseconds apart in the same recording.",
+    scheme: "random_within", model: "td_lda", title: "Shuffle one person's data",
+    blurb: "Take one person's recording, chop it into windows, shuffle them, and keep 20% back for testing. The windows you test on sit a few milliseconds away from ones you trained on.",
     honest: false,
   },
   {
-    scheme: "random", model: "td_lda", title: "Random split, pooled",
-    blurb: "Shuffle every window from every subject. Still splits inside recordings, so the same leak is present, just diluted.",
+    scheme: "random", model: "td_lda", title: "Shuffle everyone together",
+    blurb: "Same idea, but pool all eight people first. It still cuts inside each recording, so the same problem is there, just watered down.",
     honest: false,
   },
   {
-    scheme: "blocked", model: "td_lda", title: "Blocked in time",
-    blurb: "Train on the first 60% of each recording, test on the last 20%, discard the middle. Breaks the temporal leak.",
+    scheme: "blocked", model: "td_lda", title: "Split by time",
+    blurb: "Train on the first 60% of each recording and test on the last 20%, throwing away the middle. Now no test window is next to a training window.",
     honest: true,
   },
   {
-    scheme: "loso", model: "td_lda", title: "Leave one subject out",
-    blurb: "The model never sees the test subject at all. This is what a decoder does on a stranger.",
+    scheme: "loso", model: "td_lda", title: "Hold out a whole person",
+    blurb: "Train on seven people and test on the eighth. The model has never seen that arm before. This is the number that matters.",
     honest: true,
   },
 ];
@@ -40,35 +40,37 @@ export default function Leakage() {
   const perm = leakage.permutation;
 
   const models = [
-    { key: "td_lda_znorm", label: "Time-domain features + LDA, with free normalisation", year: "1993 + a z-score" },
-    { key: "cnn_latent_logreg", label: "CNN encoder → 64-d latent → logistic regression", year: "the reel's recipe" },
-    { key: "td_lda", label: "Time-domain features + LDA", year: "Hudgins, 1993" },
-    { key: "cnn_e2e", label: "CNN end-to-end (softmax head)", year: "modern default" },
+    { key: "td_lda_znorm", label: "1993 measurements, rescaled per person", year: "best" },
+    { key: "cnn_latent_logreg", label: "Neural net, then a simple classifier", year: "the popular recipe" },
+    { key: "td_lda", label: "1993 measurements, as published", year: "Hudgins, 1993" },
+    { key: "cnn_e2e", label: "Neural net, trained end to end", year: "modern default" },
   ].map((m) => ({ ...m, r: find("loso", m.key) })).sort((a, b) => b.r.accuracy - a.r.accuracy);
 
   return (
     <Section
       id="leakage"
-      eyebrow="01 — The trap"
+      eyebrow="01 · The catch"
       title="Most of the accuracy was never real"
       lede={
         <>
-          Every number below comes from the same model, the same features and the same
-          250&nbsp;ms windows. The only thing that changes is which windows are allowed
-          into the training set. The recipe that circulates online takes the top row.
+          All four numbers below come from the same model, the same features, and the
+          same quarter second of signal. The only thing I changed is which windows the
+          model was allowed to train on. The version of this project that goes around
+          online uses the top row.
         </>
       }
     >
       <div className="grid gap-3 sm:grid-cols-3">
-        <Stat value={pct(top)} label="Random split, one person" sub="What the naive recipe reports" tone="warn" />
-        <Stat value={pct(honest)} label="Leave one subject out" sub="What it does on a stranger" tone="accent" />
-        <Stat value={pp(honest - top)} label="The difference" sub="Pure evaluation artefact" />
+        <Stat value={pct(top)} label="Shuffled split" sub="What the popular method reports" tone="warn" />
+        <Stat value={pct(honest)} label="New person" sub="What it gets on someone it has not seen" tone="accent" />
+        <Stat value={pp(honest - top)} label="Difference" sub="None of this gap is the model getting better" />
       </div>
 
       <Card className="mt-6">
-        <h3 className="mb-1 text-[14px] font-medium">Accuracy by split scheme</h3>
+        <h3 className="mb-1 text-[14px] font-medium">Same model, four ways of splitting the data</h3>
         <p className="mb-4 text-[13px]" style={{ color: "var(--text-secondary)" }}>
-          Same model throughout: five time-domain features per channel into a linear discriminant.
+          The model is the same every time. Five simple measurements per sensor, fed into
+          a linear classifier.
         </p>
         {rows.map((row) => (
           <BarRow
@@ -92,18 +94,18 @@ export default function Leakage() {
         <p className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px]" style={{ color: "var(--text-muted)" }}>
           <span className="inline-flex items-center gap-1.5">
             <span className="inline-block h-3 w-px" style={{ background: "var(--text-primary)", opacity: 0.75 }} />
-            honest baseline ({pct(honest)})
+            honest score ({pct(honest)})
           </span>
           <span className="inline-flex items-center gap-1.5">
             <span className="inline-block h-3 w-4 rounded-[2px]"
                   style={{ backgroundImage: "repeating-linear-gradient(135deg, var(--text-muted) 0 2px, transparent 2px 5px)" }} />
-            hatched: accuracy that only exists because of the leak
+            striped part is accuracy that only exists because of the shortcut
           </span>
         </p>
         <button onClick={() => setShowAll(!showAll)}
                 className="focusable mt-3 font-[family-name:var(--font-mono)] text-[11px] uppercase tracking-wider underline underline-offset-4"
                 style={{ color: "var(--text-muted)" }}>
-          {showAll ? "Hide" : "What each split means"}
+          {showAll ? "Hide" : "What each one means"}
         </button>
         {showAll && (
           <dl className="mt-3 space-y-2 text-[13px]">
@@ -116,7 +118,7 @@ export default function Leakage() {
           </dl>
         )}
         <TableView
-          headers={["Split scheme", "Accuracy", "95% CI", "Balanced acc.", "Macro F1", "Folds"]}
+          headers={["How the data was split", "Accuracy", "95% range", "Balanced", "Macro F1", "Runs"]}
           rows={rows.map((r) => [
             r.title, pct(r.r.accuracy, 2),
             `${pct(r.r.accuracy_ci[0], 1)} – ${pct(r.r.accuracy_ci[1], 1)}`,
@@ -127,44 +129,47 @@ export default function Leakage() {
 
       <div className="mt-6 grid gap-4 lg:grid-cols-2">
         <Card>
-          <h3 className="mb-1 text-[14px] font-medium">Where the leak actually is</h3>
+          <h3 className="mb-1 text-[14px] font-medium">Where the problem actually comes from</h3>
           <p className="text-[13px] leading-relaxed" style={{ color: "var(--text-secondary)" }}>
-            Simply splitting each recording in time — while still training on the very
-            same people — drops accuracy from{" "}
+            Splitting each recording by time, while still training on the very same
+            people, drops accuracy from{" "}
             <strong style={{ color: "var(--text-primary)" }}>{pct(top)}</strong> to{" "}
             <strong style={{ color: "var(--text-primary)" }}>
               {pct(find("blocked", "td_lda").accuracy)}
-            </strong>. Removing the test subject from training altogether gives{" "}
-            <strong style={{ color: "var(--text-primary)" }}>{pct(honest)}</strong> —
-            statistically the same number. Whether the model has ever met the wearer
-            turns out to be worth almost nothing here; what mattered was that the
-            original split let it train on windows overlapping the ones it was tested
-            on. The field usually blames the cross-subject gap. On this dataset, the
-            gap is the clock.
+            </strong>. Taking the test person out of training entirely gives{" "}
+            <strong style={{ color: "var(--text-primary)" }}>{pct(honest)}</strong>,
+            which is the same number once you account for noise.
+          </p>
+          <p className="mt-3 text-[13px] leading-relaxed" style={{ color: "var(--text-secondary)" }}>
+            So whether the model has met you before barely matters here. What mattered
+            was that the first split let it train on windows sitting right next to the
+            ones it was graded on. People usually blame the differences between bodies
+            for this kind of gap. On this data it was the clock.
           </p>
         </Card>
         <Card>
-          <h3 className="mb-1 text-[14px] font-medium">Is {pct(honest)} even real?</h3>
+          <h3 className="mb-1 text-[14px] font-medium">Is {pct(honest)} real, though?</h3>
           <p className="text-[13px] leading-relaxed" style={{ color: "var(--text-secondary)" }}>
-            Shuffling the gesture labels {perm.n} times and rerunning the whole
-            leave-one-subject-out pipeline puts the null at{" "}
+            To check, I scrambled the gesture labels {perm.n} times and ran the whole
+            thing again each time. With the labels meaningless, the model scored{" "}
             <span className="tnum font-[family-name:var(--font-mono)]">{pct(perm.mean, 1)}</span>{" "}
-            (95th percentile {pct(perm.p95, 1)}, best of {perm.n} runs {pct(perm.max, 1)}) —
-            indistinguishable from the {pct(perm.theoretical_chance, 0)} you would expect
-            from five classes. The observed score sits far outside that null,{" "}
+            on average, and never got above {pct(perm.max, 1)}. That is exactly the{" "}
+            {pct(perm.theoretical_chance, 0)} you would expect from guessing between five
+            options. The real score is nowhere near that range, at{" "}
             <span className="tnum font-[family-name:var(--font-mono)]">p = {perm.p_value.toFixed(3)}</span>.
+            So the signal is there. It is just five points smaller than advertised.
           </p>
         </Card>
       </div>
 
       <Card className="mt-4">
         <h3 className="mb-1 text-[14px] font-medium">
-          And the deep model does not win
+          The neural network does not win
         </h3>
         <p className="mb-4 text-[13px]" style={{ color: "var(--text-secondary)" }}>
-          All four scored leave-one-subject-out at 250&nbsp;ms<Inferred />. The best result on
-          this dataset is a feature set from 1993 plus a per-subject z-score that costs nothing
-          and needs no labels.
+          All four models tested on a held out person, using a quarter second of
+          signal<Inferred />. The best score here comes from a set of measurements
+          published in 1993, plus one rescaling step that is free and needs no labels.
         </p>
         {models.map((m, i) => (
           <BarRow key={m.key} label={<span className="font-medium">{m.label}</span>}
@@ -173,7 +178,7 @@ export default function Leakage() {
                   note={m.year} highlight={i === 0} />
         ))}
         <TableView
-          headers={["Model", "LOSO accuracy", "95% CI", "Macro F1"]}
+          headers={["Model", "Accuracy on a new person", "95% range", "Macro F1"]}
           rows={models.map((m) => [
             m.label, pct(m.r.accuracy, 2),
             `${pct(m.r.accuracy_ci[0], 1)} – ${pct(m.r.accuracy_ci[1], 1)}`, m.r.macro_f1.toFixed(3),

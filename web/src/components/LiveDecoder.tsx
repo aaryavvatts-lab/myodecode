@@ -31,7 +31,7 @@ function DecoderPanel({ title, subtitle, probs, pred, disabled, acc, n, ms, gcol
           <span className="tnum font-[family-name:var(--font-mono)]">{ms.toFixed(2)} ms</span>
           <span className="tnum font-[family-name:var(--font-mono)] text-[14px]"
                 style={{ color: "var(--text-primary)" }}>
-            {acc === null ? "—" : pct(acc, 1)}
+            {acc === null ? "n/a" : pct(acc, 1)}
           </span>
         </div>
       </div>
@@ -54,7 +54,7 @@ function DecoderPanel({ title, subtitle, probs, pred, disabled, acc, n, ms, gcol
         ))}
       </div>
       <div className="mt-2 text-[11px]" style={{ color: "var(--text-muted)" }}>
-        {n > 0 ? `${n} steady-state windows scored` : "waiting for warm-up"}
+        {n > 0 ? `${n} windows scored so far` : "waiting to warm up"}
       </div>
     </div>
   );
@@ -113,7 +113,7 @@ export default function LiveDecoder() {
         std.current = new CausalStandardiser(m.n_features, mt.warmup_windows, mt.warmup_windows);
         gain.current = new CausalGain(2 * mt.fs);
       } catch {
-        if (!dead) setErr("Could not load the decoder assets.");
+        if (!dead) setErr("Could not load the decoder files. Try refreshing the page.");
       }
     })();
     return () => { dead = true; };
@@ -284,14 +284,15 @@ export default function LiveDecoder() {
   return (
     <Section
       id="live"
-      eyebrow="06 — Live"
-      title="Watch it decode someone it has never met"
+      eyebrow="09 · Try it"
+      title="Watch it read someone it has never met"
       lede={
         <>
-          The decoder below is running in this page — extracting the same five features
-          per channel and applying the same linear model as the Python pipeline, on raw
-          samples, in your browser. The signal is subject&nbsp;{meta?.subject ?? 8}, who was
-          held out of training entirely. Nothing here is a replay of stored predictions.
+          The decoder below is really running, right here in your browser. It takes the
+          same five measurements per sensor and applies the same model as the Python code,
+          on raw signal, on your machine. The recording is person{" "}
+          {meta?.subject ?? 8}, who was left out of training completely. None of this is a
+          playback of saved answers.
         </>
       }
     >
@@ -326,22 +327,23 @@ export default function LiveDecoder() {
           <canvas ref={canvas} className="block h-[180px] w-full" />
         </div>
         <p className="mt-2 text-[11px]" style={{ color: "var(--text-muted)" }}>
-          Four channels, last {DISPLAY_S} s. The shaded box is the {meta?.window_samples ?? 250}-sample
-          window feeding the decoder right now.
+          Four sensors, last {DISPLAY_S} seconds. The shaded box is the chunk of signal
+          the decoder is looking at right now.
         </p>
 
         {warming && playing && (
           <div className="mt-4 rounded-lg border p-3" style={{ background: "var(--warn-soft)" }}>
             <div className="mb-2 flex items-center justify-between text-[12px]" style={{ color: "var(--warn)" }}>
-              <span>Warming up on unlabelled signal ({meta?.warmup_seconds ?? 10}s of wear)…</span>
+              <span>Warming up. Needs about {meta?.warmup_seconds ?? 10} seconds of wear first.</span>
               <span className="tnum font-[family-name:var(--font-mono)]">{Math.round(warm * 100)}%</span>
             </div>
             <div className="h-1.5 overflow-hidden rounded-full" style={{ background: "var(--surface-3)" }}>
               <div className="h-full rounded-full transition-[width]" style={{ width: `${warm * 100}%`, background: "var(--warn)" }} />
             </div>
             <p className="mt-2 text-[11px]" style={{ color: "var(--text-muted)" }}>
-              No labels are used — only the mean and variance of the signal seen so far,
-              exactly what a real device can compute on the wrist.
+              It is not being told any answers here. It is just measuring how loud and how
+              varied your signal normally is, which is something a real wristband can work
+              out on its own.
             </p>
           </div>
         )}
@@ -349,8 +351,8 @@ export default function LiveDecoder() {
         <div className="mt-5 grid gap-5 md:grid-cols-[minmax(0,1fr)_minmax(0,15rem)]">
           <div className="space-y-5">
             <DecoderPanel
-              title="Time-domain features + LDA"
-              subtitle="20 numbers, one matrix multiply"
+              title="The 1993 method"
+              subtitle="Twenty simple measurements and one multiplication"
               probs={probs} pred={pred} disabled={warming}
               acc={decodes ? correct / decodes : null} n={decodes}
               ms={computeMs} gcol={gcol}
@@ -358,27 +360,27 @@ export default function LiveDecoder() {
 
             {cnnState === "on" ? (
               <DecoderPanel
-                title="CNN encoder → latent → classifier"
-                subtitle="53k parameters, running in WebAssembly"
+                title="The neural network"
+                subtitle="53,000 weights, running in WebAssembly"
                 probs={cnnProbs} pred={cnnPred} disabled={warming || cnnPred < 0}
                 acc={cnnDecodes ? cnnCorrect / cnnDecodes : null} n={cnnDecodes}
                 ms={cnnMs} gcol={gcol}
               />
             ) : (
               <div className="rounded-lg border border-dashed p-4">
-                <div className="text-[13px] font-medium">CNN encoder → latent → classifier</div>
+                <div className="text-[13px] font-medium">The neural network</div>
                 <p className="mt-1 text-[12px] leading-relaxed" style={{ color: "var(--text-muted)" }}>
-                  Run the reel&apos;s architecture alongside the linear model and watch them
-                  race on the same windows. Needs an 11 MB WebAssembly runtime, so it only
-                  downloads if you ask for it.
+                  Run the neural network next to the simple model and watch them race on
+                  the same signal. It needs an 11 MB runtime file, so it only downloads if
+                  you ask for it.
                 </p>
                 <button
                   onClick={enableCnn}
                   disabled={cnnState === "loading" || cnnState === "failed"}
                   className="focusable mt-3 rounded-lg border px-3 py-1.5 text-[12px] font-medium disabled:opacity-50">
-                  {cnnState === "loading" ? "Loading runtime…"
-                    : cnnState === "failed" ? "Failed to load — the linear decoder is unaffected"
-                    : "Load the CNN and race them"}
+                  {cnnState === "loading" ? "Loading, this takes a moment"
+                    : cnnState === "failed" ? "That did not load. The simple decoder is still fine."
+                    : "Load it and race them"}
                 </button>
                 {cnnErr && (
                   <p className="mt-2 font-[family-name:var(--font-mono)] text-[11px]" style={{ color: "var(--warn)" }}>
@@ -399,29 +401,29 @@ export default function LiveDecoder() {
             </div>
             <dl className="mt-4 space-y-1.5 border-t pt-3 text-[12px]">
               <div className="flex justify-between">
-                <dt style={{ color: "var(--text-muted)" }}>Subject</dt>
-                <dd className="tnum font-[family-name:var(--font-mono)]">{meta?.subject ?? "—"} (held out)</dd>
+                <dt style={{ color: "var(--text-muted)" }}>Person</dt>
+                <dd className="tnum font-[family-name:var(--font-mono)]">{meta?.subject ?? "?"}, held out</dd>
               </div>
               <div className="flex justify-between">
-                <dt style={{ color: "var(--text-muted)" }}>Window</dt>
-                <dd className="tnum font-[family-name:var(--font-mono)]">{meta?.window_samples ?? "—"} samples</dd>
+                <dt style={{ color: "var(--text-muted)" }}>Signal used</dt>
+                <dd className="tnum font-[family-name:var(--font-mono)]">{meta?.window_samples ?? "?"} samples</dd>
               </div>
               <div className="flex justify-between">
-                <dt style={{ color: "var(--text-muted)" }}>Hop</dt>
-                <dd className="tnum font-[family-name:var(--font-mono)]">{meta?.hop_samples ?? "—"} samples</dd>
+                <dt style={{ color: "var(--text-muted)" }}>New answer every</dt>
+                <dd className="tnum font-[family-name:var(--font-mono)]">{meta?.hop_samples ?? "?"} samples</dd>
               </div>
             </dl>
             {cnnState === "on" && cnnDecodes > 0 && decodes > 0 && (
               <p className="mt-3 border-t pt-3 text-[12px] leading-relaxed" style={{ color: "var(--text-secondary)" }}>
-                On the windows both have scored, the linear model is{" "}
+                On the windows both have seen, the simple model is{" "}
                 <strong style={{ color: "var(--text-primary)" }}>
                   {(((correct / decodes) - (cnnCorrect / cnnDecodes)) * 100).toFixed(1)} pp
                 </strong>{" "}
-                ahead, at{" "}
+                ahead, using{" "}
                 <strong style={{ color: "var(--text-primary)" }}>
                   {(cnnMs / Math.max(computeMs, 1e-6)).toFixed(0)}×
                 </strong>{" "}
-                less compute.
+                less computing power.
               </p>
             )}
           </div>
@@ -429,20 +431,20 @@ export default function LiveDecoder() {
       </Card>
 
       <div className="mt-4 grid gap-3 sm:grid-cols-3">
-        <Stat value={pct(realtime.normalisation.causal_ema.accuracy_steady)} label="Offline, same session"
-              sub="Steady-state windows, causal normalisation" tone="accent" />
-        <Stat value={pct(realtime.normalisation.oracle_global.accuracy_steady)} label="With offline normalisation"
-              sub="The upper bound a device cannot reach" />
-        <Stat value={pct(realtime.normalisation.causal_ema.accuracy_transition)} label="Mid-gesture-change"
-              sub="Nobody can be right here — the window straddles two gestures" tone="warn" />
+        <Stat value={pct(realtime.normalisation.causal_ema.accuracy_steady)} label="While holding a gesture"
+              sub="Using only information the device could have at the time" tone="accent" />
+        <Stat value={pct(realtime.normalisation.oracle_global.accuracy_steady)} label="If it could see the future"
+              sub="A ceiling no real device can actually reach" />
+        <Stat value={pct(realtime.normalisation.causal_ema.accuracy_transition)} label="Mid gesture change"
+              sub="Nothing could be right here. The window covers two gestures at once." tone="warn" />
       </div>
 
       <Card className="mt-4">
         <h3 className="mb-1 text-[14px] font-medium">How long before it works at all?</h3>
         <p className="mb-4 text-[13px]" style={{ color: "var(--text-secondary)" }}>
-          The running normaliser needs to see enough signal to estimate the wearer&apos;s
-          statistics. Until it has, the decoder is guessing. This is a real cost of
-          the calibration-free approach, and nobody reports it.
+          Before the decoder can rescale anything, it has to watch your arm long enough to
+          learn what normal looks like for you. Until then it is guessing. This is a real
+          cost of skipping the setup routine, and I have not seen anyone report it.
         </p>
         <div className="space-y-1.5">
           {realtime.warmup_curve.map((w) => (
@@ -461,26 +463,28 @@ export default function LiveDecoder() {
           ))}
         </div>
         <p className="mt-3 text-[12px]" style={{ color: "var(--text-muted)" }}>
-          Highlighted bar is the {realtime.demo_warmup_s}s the demo above uses. Two seconds of
-          wear is not enough — accuracy collapses to {pct(realtime.warmup_curve[0].accuracy_steady, 0)}.
+          The highlighted bar is the {realtime.demo_warmup_s} seconds the demo above uses.
+          Two seconds is nowhere near enough. Accuracy falls to{" "}
+          {pct(realtime.warmup_curve[0].accuracy_steady, 0)}.
         </p>
       </Card>
 
       <Card className="mt-4">
-        <h3 className="mb-1 text-[14px] font-medium">The number the offline score was hiding</h3>
+        <h3 className="mb-1 text-[14px] font-medium">What the headline number was hiding</h3>
         <p className="text-[13px] leading-relaxed" style={{ color: "var(--text-secondary)" }}>
-          The headline accuracy leans on standardising features per subject — which needs
-          that person's statistics pooled across all five gestures, something no device has
-          at power-on. Replacing it with a running estimate over the past only costs{" "}
+          The headline accuracy leans on rescaling the measurements for each person. Doing
+          that properly needs their numbers from all five gestures at once, which no device
+          has when you switch it on. Swapping it for a running estimate that only uses the
+          past costs just{" "}
           <strong style={{ color: "var(--text-primary)" }}>
             {((realtime.normalisation.oracle_global.accuracy_steady - realtime.normalisation.causal_ema.accuracy_steady) * 100).toFixed(1)} pp
           </strong>
-          , so in this case the offline convenience was not doing unfair work. Dropping
-          adaptation entirely costs{" "}
+          , so the shortcut was not doing anything unfair here. Dropping the rescaling
+          altogether costs{" "}
           <strong style={{ color: "var(--text-primary)" }}>
             {((realtime.normalisation.oracle_global.accuracy_steady - realtime.normalisation.none.accuracy_steady) * 100).toFixed(1)} pp
           </strong>.
-          The real cost is elsewhere: windows spanning a gesture change score{" "}
+          The real cost sits somewhere else. Windows that land on a gesture change score{" "}
           {pct(realtime.normalisation.causal_ema.accuracy_transition)}, and a
           per-window average that pools them reports{" "}
           {pct(realtime.normalisation.causal_ema.accuracy_all)} rather than{" "}
