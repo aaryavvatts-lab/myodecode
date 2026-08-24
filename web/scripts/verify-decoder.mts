@@ -5,7 +5,7 @@
  * This exercises the actual shipped modules in src/lib/decoder.ts, so if the
  * TypeScript port ever drifts from the Python pipeline, this fails.
  */
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 
 import { CausalGain, CausalStandardiser, classify, extractFeatures, type LdaModel } from "../src/lib/decoder";
@@ -72,20 +72,32 @@ if (steady < 0.9) {
   console.error(`\n  FAIL: steady-state accuracy ${(steady * 100).toFixed(1)}% is implausibly low.`);
   process.exit(1);
 }
-console.log(`\n  OK — browser decoder matches Python within ${(drift * 100).toFixed(2)} pp.`);
+console.log(`\n  OK: browser decoder matches Python within ${(drift * 100).toFixed(2)} pp.`);
 
 
 // ---------------------------------------------------------------------------
 // Second decoder: the CNN, through the same causal gain the browser applies.
 // ---------------------------------------------------------------------------
-const ort = await import("onnxruntime-web");
+// Same entry point the browser uses. The default export pulls the WebGPU build,
+// which asks for a .jsep.mjs file at runtime; importing it here would let that
+// mismatch pass the test and only fail for real visitors.
+const ort = await import("onnxruntime-web/wasm");
+ort.env.wasm.wasmPaths = join(import.meta.dirname, "..", "node_modules", "onnxruntime-web", "dist") + "/";
 ort.env.wasm.numThreads = 1;
 ort.env.logLevel = "error";
 
+// The files the runtime will ask for must exist where the site serves them.
+for (const f of ["ort-wasm-simd-threaded.mjs", "ort-wasm-simd-threaded.wasm"]) {
+  if (!existsSync(join(PUB, "ort", f))) {
+    console.error(`\n  FAIL: public/ort/${f} is missing. The live decoder would not start.`);
+    process.exit(1);
+  }
+}
+
 const cnnMeta = JSON.parse(readFileSync(join(PUB, "model", "cnn_meta.json"), "utf8"));
-const sess = await ort.InferenceSession.create(join(PUB, "model", "cnn.onnx"), {
-  executionProviders: ["wasm"],
-});
+// The web build treats a string as a URL to fetch, so hand it the bytes directly.
+const onnxBytes = new Uint8Array(readFileSync(join(PUB, "model", "cnn.onnx")));
+const sess = await ort.InferenceSession.create(onnxBytes, { executionProviders: ["wasm"] });
 const inName = sess.inputNames[0];
 const outName = sess.outputNames[0];
 
@@ -131,4 +143,4 @@ if (cnnAcc < 0.85) {
   console.error(`\n  FAIL: CNN accuracy ${(cnnAcc * 100).toFixed(1)}% is implausibly low — check the gain path.`);
   process.exit(1);
 }
-console.log(`\n  OK — both decoders verified.`);
+console.log(`\n  OK: both decoders verified.`);

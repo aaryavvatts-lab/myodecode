@@ -1,10 +1,16 @@
 /**
  * Lazy loader for the CNN decoder.
  *
- * onnxruntime-web pulls an 11 MB WebAssembly runtime, so it is only fetched when
- * the visitor explicitly turns the CNN on. Threads are disabled deliberately:
- * multi-threaded WASM needs cross-origin isolation headers, which would complicate
- * the deployment for no benefit at this model size.
+ * The runtime is several megabytes, so it is only fetched when the visitor
+ * explicitly turns the CNN on.
+ *
+ * Two deliberate choices. The import is "onnxruntime-web/wasm" rather than the
+ * default entry point: the default pulls the WebGPU build, which then goes looking
+ * for a separate .jsep.mjs file at runtime and fails if it is not served. The wasm
+ * build looks for the plain ort-wasm-simd-threaded files, which are served from
+ * /ort on this domain so nothing is fetched from a CDN. Threads are
+ * off because multi-threaded WebAssembly needs cross-origin isolation headers, which
+ * would complicate the deployment for no gain on a model this small.
  */
 export interface CnnMeta {
   window_samples: number;
@@ -22,7 +28,7 @@ export interface CnnResult {
 
 export async function createCnn() {
   const [ort, meta] = await Promise.all([
-    import("onnxruntime-web"),
+    import("onnxruntime-web/wasm"),
     fetch("/model/cnn_meta.json").then((r) => r.json() as Promise<CnnMeta>),
   ]);
   ort.env.wasm.wasmPaths = "/ort/";
