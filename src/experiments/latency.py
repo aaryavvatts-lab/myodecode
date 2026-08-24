@@ -17,6 +17,7 @@ from ..features import extract
 from ..models import EMGClassifier, make_lda
 from ..sk_runner import run_sklearn
 from ..train import get_device, run_cnn_loso
+from . import _checkpoint as ckpt
 from ._common import epochs, features, ms, save
 
 
@@ -65,8 +66,16 @@ FIXED_STRIDE = 125   # samples; holds the window count constant across the sweep
 
 def main(windows=WINDOW_SWEEP_MS, cnn: bool = True, cnn_epochs: int = 40,
          stride_samples: int = FIXED_STRIDE):
+    done = ckpt.load("latency")
     rows = []
     for w in windows:
+        key = f"{w}"
+        if key in done:
+            rows.append(done[key])
+            r = done[key]["models"]
+            print(f"  {float(key):7.1f} ms  (cached)  lda={r['td_lda']['accuracy']:.4f}  "
+                  f"lda+zn={r['td_lda_znorm']['accuracy']:.4f}", flush=True)
+            continue
         ep = epochs(w, stride_samples=stride_samples)
         F = features(ep)
         timing = measure_inference_ms(ep.window_len)
@@ -88,8 +97,9 @@ def main(windows=WINDOW_SWEEP_MS, cnn: bool = True, cnn_epochs: int = 40,
             line += f"  cnn_lat={lat.accuracy:.4f}  cnn_e2e={e2e.accuracy:.4f}"
 
         rows.append(row)
+        ckpt.put("latency", key, row)
         print(line + f"  [infer {timing['td_features_ms']:.3f}/"
-                     f"{timing['cnn_cpu_ms']:.2f} ms]")
+                     f"{timing['cnn_cpu_ms']:.2f} ms]", flush=True)
 
     # knee: smallest window within 1 percentage point of the best result
     best_by_model = {}

@@ -32,6 +32,8 @@ from ..sk_runner import per_subject_znorm
 from ._common import epochs, save
 
 SMOOTH_K = (1, 3, 5, 7, 9, 13, 17, 25)
+WARMUP_SWEEP_S = (2, 4, 6, 8, 10, 15, 20, 30)
+DEMO_WARMUP_S = 10.0     # what the website's live decoder uses
 
 
 def build_session(subject: int, block_s: float = 2.0, n_cycles: int = 12,
@@ -128,6 +130,21 @@ def main(demo_subject: int = 8, window_ms: int = 250, hop_ms: int = 25,
               f"steady={results[name]['accuracy_steady']:.4f}  "
               f"transition={results[name]['accuracy_transition']:.4f}")
 
+    # --- how long must it warm up before it works? --------------------------------
+    warmup_curve = []
+    for wu in WARMUP_SWEEP_S:
+        n = max(4, int(wu * FS / hop))
+        Fn = causal_standardise(Fw, n, tau_windows=wu * FS / hop)
+        pr = clf.predict(Fn)
+        post = np.zeros(len(pr), bool)
+        post[n:] = True
+        warmup_curve.append({
+            "warmup_s": wu, "warmup_windows": int(n),
+            "accuracy_steady": float((pr[pure] == y_true[pure]).mean()),
+            "accuracy_after_warmup": float((pr[pure & post] == y_true[pure & post]).mean()),
+        })
+        print(f"  warmup {wu:4.0f} s  steady={warmup_curve[-1]['accuracy_steady']:.4f}")
+
     # --- smoothing sweep on the deployable condition -----------------------------
     p = probs["causal_ema"]
     smoothing = []
@@ -153,6 +170,8 @@ def main(demo_subject: int = 8, window_ms: int = 250, hop_ms: int = 25,
         "block_order": order,
         "normalisation": results,
         "smoothing": smoothing,
+        "warmup_curve": warmup_curve,
+        "demo_warmup_s": DEMO_WARMUP_S,
         "compute_ms": {"features": round(feat_ms, 4),
                        "classifier": results["causal_ema"]["infer_ms_per_window"]},
         "note": ("causal_ema is the only condition a device can implement: it uses a "
@@ -170,7 +189,8 @@ def main(demo_subject: int = 8, window_ms: int = 250, hop_ms: int = 25,
             "subject": demo_subject, "fs": FS, "n_channels": 4,
             "n_samples": int(len(sig)), "block_samples": int(B),
             "block_order": order, "window_samples": W, "hop_samples": int(hop),
-            "warmup_windows": int(warm),
+            "warmup_windows": int(DEMO_WARMUP_S * FS / hop),
+            "warmup_seconds": DEMO_WARMUP_S,
             "train_mu": tr_mu.round(6).tolist(), "train_sd": tr_sd.round(6).tolist(),
         }, indent=2))
         print(f"  -> web/public/data/session.bin ({len(sig) * 4 * 4 / 1e6:.1f} MB)")

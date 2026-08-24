@@ -75,7 +75,8 @@ export function LineChart({
 
   const sx = scaleLinear(x0, x1, m.l, m.l + iw);
   const sy = scaleLinear(y0, y1, m.t + ih, m.t);
-  const yTicks = [0, 0.25, 0.5, 0.75, 1];
+  const yFracs = [0, 0.25, 0.5, 0.75, 1];
+  const clipId = `clip-${xLabel.replace(/\W/g, "")}-${series.length}`;
   const ticks = xTicks ?? [...new Set(xs)].sort((a, b) => a - b);
 
   const idxOf = (px: number) => {
@@ -93,10 +94,15 @@ export function LineChart({
              setHover(idxOf(((e.clientX - r.left) / r.width) * Math.max(w, 200)));
            }}
            onMouseLeave={() => setHover(null)}>
-        <Axes w={Math.max(w, 200)} h={h} m={m} xTicks={ticks} yTicks={yTicks}
+        <defs>
+          <clipPath id={clipId}>
+            <rect x={m.l} y={m.t} width={iw} height={ih} />
+          </clipPath>
+        </defs>
+        <Axes w={Math.max(w, 200)} h={h} m={m} xTicks={ticks} yTicks={yFracs}
               xLabel={xLabel} yLabel={yLabel}
               fmtX={fmtX ?? ((v) => String(v))}
-              fmtY={fmtY ?? ((t) => `${Math.round((y0 + t * (y1 - y0)) * 100)}%`)}
+              fmtY={(t) => (fmtY ?? ((v: number) => `${Math.round(v * 100)}%`))(y0 + t * (y1 - y0))}
               logX={(v) => sx(tf(v))} />
         {annotations?.map((a) => (
           <g key={a.label}>
@@ -106,11 +112,11 @@ export function LineChart({
           </g>
         ))}
         {series.map((s) => (
-          <g key={s.name}>
+          <g key={s.name} clipPath={`url(#${clipId})`}>
             {s.points.some((p) => p.lo !== undefined) && (
               <path d={`${s.points.map((p, i) => `${i ? "L" : "M"}${sx(tf(p.x))},${sy(p.hi ?? p.y)}`).join("")}
                         ${s.points.slice().reverse().map((p) => `L${sx(tf(p.x))},${sy(p.lo ?? p.y)}`).join("")}Z`}
-                    fill={s.color} opacity={0.12} />
+                    fill={s.color} opacity={0.10} />
             )}
             <path d={s.points.map((p, i) => `${i ? "L" : "M"}${sx(tf(p.x))},${sy(p.y)}`).join("")}
                   fill="none" stroke={s.color} strokeWidth={2} strokeLinejoin="round" strokeLinecap="round"
@@ -161,25 +167,52 @@ export function Legend({ items }: { items: { name: string; color: string }[] }) 
 
 /** Horizontal bars, 4px rounded data-end anchored to the baseline. */
 export function BarRow({
-  label, value, max, color, note, highlight,
-}: { label: React.ReactNode; value: number; max: number; color: string; note?: string; highlight?: boolean }) {
-  return (
-    <div className="grid grid-cols-[minmax(0,11rem)_1fr_auto] items-center gap-3 py-1.5">
-      <div className="text-[13px] leading-tight">{label}</div>
-      <div className="relative h-7 rounded-[4px]" style={{ background: "var(--surface-2)" }}>
-        <div className="h-full rounded-[4px]" style={{
-          width: `${(value / max) * 100}%`, background: color,
-          outline: highlight ? "2px solid var(--text-primary)" : undefined, outlineOffset: 1,
+  label, value, max, color, note, highlight, refLine, excessColor,
+}: {
+  label: React.ReactNode; value: number; max: number; color: string;
+  note?: string; highlight?: boolean;
+  /** Draws a marker at this value; the part of the bar beyond it is hatched, so the
+   *  excess over a baseline is visible without truncating the axis. */
+  refLine?: number; excessColor?: string;
+}) {
+  const over = refLine !== undefined && value > refLine;
+  const bar = (
+    <div className="relative h-7 overflow-hidden rounded-[4px]" style={{ background: "var(--surface-2)" }}>
+      <div className="absolute inset-y-0 left-0 rounded-[4px]" style={{
+        width: `${(value / max) * 100}%`, background: color,
+        outline: highlight ? "2px solid var(--text-primary)" : undefined, outlineOffset: -1,
+      }} />
+      {over && (
+        <div className="absolute inset-y-0" style={{
+          left: `${(refLine! / max) * 100}%`, width: `${((value - refLine!) / max) * 100}%`,
+          backgroundImage: `repeating-linear-gradient(135deg, ${excessColor ?? "rgba(255,255,255,.55)"} 0 2px, transparent 2px 5px)`,
         }} />
-        {note && (
-          <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[11px]" style={{ color: "var(--text-muted)" }}>
-            {note}
-          </span>
-        )}
+      )}
+      {refLine !== undefined && (
+        <div className="absolute inset-y-0 w-px" style={{ left: `${(refLine / max) * 100}%`, background: "var(--text-primary)", opacity: 0.75 }} />
+      )}
+      {note && (
+        <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[11px]" style={{ color: "var(--text-muted)" }}>
+          {note}
+        </span>
+      )}
+    </div>
+  );
+  const readout = (
+    <span className="tnum font-[family-name:var(--font-mono)] text-[13px]">
+      {(value * 100).toFixed(1)}%
+    </span>
+  );
+  // Narrow screens stack the label above a full-width bar; a fixed label column at
+  // 375px would leave the bar a stub.
+  return (
+    <div className="py-1.5 sm:grid sm:grid-cols-[minmax(0,11rem)_1fr_auto] sm:items-center sm:gap-3">
+      <div className="mb-1 flex items-baseline justify-between gap-3 sm:mb-0 sm:block">
+        <span className="text-[13px] leading-tight">{label}</span>
+        <span className="shrink-0 sm:hidden">{readout}</span>
       </div>
-      <div className="tnum w-16 text-right font-[family-name:var(--font-mono)] text-[13px]">
-        {(value * 100).toFixed(1)}%
-      </div>
+      {bar}
+      <div className="hidden w-16 text-right sm:block">{readout}</div>
     </div>
   );
 }

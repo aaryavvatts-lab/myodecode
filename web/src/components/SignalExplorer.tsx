@@ -12,21 +12,41 @@ interface Signals {
   signals: Record<string, { raw: number[][]; envelope: number[][] }>;
 }
 
-function Trace({ data, color, height, scale }: { data: number[]; color: string; height: number; scale: number }) {
+function Trace({ data, color, height, scale, sharedMax, area }: {
+  data: number[]; color: string; height: number; scale: number;
+  sharedMax?: number; area?: boolean;
+}) {
   const [ref, w] = useElementWidth<HTMLDivElement>();
-  const d = useMemo(() => {
-    if (!data.length) return "";
+  const W = Math.max(w, 100);
+  const { line, fill } = useMemo(() => {
+    if (!data.length) return { line: "", fill: "" };
     const n = data.length;
-    const amp = Math.max(...data.map(Math.abs)) * scale || 1;
-    return data.map((v, i) =>
-      `${i ? "L" : "M"}${((i / (n - 1)) * Math.max(w, 100)).toFixed(1)},${(height / 2 - (v * scale / amp) * (height / 2 - 2)).toFixed(1)}`
-    ).join("");
-  }, [data, w, height, scale]);
+    // A shared maximum keeps the between-channel amplitude ratios -- which are what
+    // actually distinguish the gestures -- visible. Per-trace scaling is only for
+    // inspecting waveform shape.
+    const amp = (sharedMax ?? Math.max(...data.map(Math.abs))) * scale || 1;
+    const px = (i: number) => ((i / (n - 1)) * W).toFixed(1);
+    if (area) {
+      // A rectified envelope is non-negative, so anchor it to a baseline instead of
+      // wasting half the lane mirroring it about a midline.
+      const y = (v: number) => (height - 1 - (Math.abs(v) * scale / amp) * (height - 3)).toFixed(1);
+      const l = data.map((v, i) => `${i ? "L" : "M"}${px(i)},${y(v)}`).join("");
+      return { line: l, fill: `${l}L${W},${height}L0,${height}Z` };
+    }
+    const y = (v: number) => (height / 2 - (v * scale / amp) * (height / 2 - 2)).toFixed(1);
+    return { line: data.map((v, i) => `${i ? "L" : "M"}${px(i)},${y(v)}`).join(""), fill: "" };
+  }, [data, W, height, scale, sharedMax, area]);
+
   return (
     <div ref={ref} className="w-full">
-      <svg width="100%" height={height} viewBox={`0 0 ${Math.max(w, 100)} ${height}`} preserveAspectRatio="none">
-        <line x1={0} x2={Math.max(w, 100)} y1={height / 2} y2={height / 2} stroke="var(--grid)" strokeWidth={1} />
-        <path d={d} fill="none" stroke={color} strokeWidth={1} vectorEffect="non-scaling-stroke" />
+      <svg width="100%" height={height} viewBox={`0 0 ${W} ${height}`} preserveAspectRatio="none">
+        {area ? (
+          <line x1={0} x2={W} y1={height - 1} y2={height - 1} stroke="var(--grid)" strokeWidth={1} />
+        ) : (
+          <line x1={0} x2={W} y1={height / 2} y2={height / 2} stroke="var(--grid)" strokeWidth={1} />
+        )}
+        {fill && <path d={fill} fill={color} opacity={0.3} />}
+        <path d={line} fill="none" stroke={color} strokeWidth={1} vectorEffect="non-scaling-stroke" />
       </svg>
     </div>
   );
@@ -37,7 +57,7 @@ export default function SignalExplorer() {
   const [sig, setSig] = useState<Signals | null>(null);
   const [subject, setSubject] = useState(1);
   const [cls, setCls] = useState(1);
-  const [view, setView] = useState<"raw" | "envelope">("raw");
+  const [view, setView] = useState<"raw" | "envelope">("envelope");
 
   useEffect(() => {
     fetch("/data/signals.json").then((r) => r.json()).then(setSig).catch(() => {});
@@ -48,6 +68,9 @@ export default function SignalExplorer() {
   const gcol = GESTURE_COLORS[mode];
   const ccol = CHANNEL_COLORS[mode];
   const sigInfo = sig?.class_signatures[String(cls)];
+  const sharedMax = entry
+    ? Math.max(...entry.envelope.flat().map(Math.abs))
+    : undefined;
 
   return (
     <Section
@@ -108,8 +131,10 @@ export default function SignalExplorer() {
                 <Trace
                   data={view === "raw" ? entry.raw[ch] : entry.envelope[ch]}
                   color={ccol[ch]}
-                  height={view === "raw" ? 46 : 34}
+                  height={view === "raw" ? 46 : 38}
                   scale={sig!.scale}
+                  sharedMax={view === "envelope" ? sharedMax : undefined}
+                  area={view === "envelope"}
                 />
               </div>
             ))}
@@ -125,10 +150,13 @@ export default function SignalExplorer() {
         )}
 
         <p className="mt-5 text-[12px] leading-relaxed" style={{ color: "var(--text-muted)" }}>
-          Each trace is scaled independently so its shape stays visible; the envelope view
-          rectifies and smooths, which is what makes the between-gesture differences legible.
-          Absolute amplitudes differ several-fold between channels and between people —
-          that variation is exactly what the decoder has to survive.
+          <strong style={{ color: "var(--text-secondary)" }}>Raw</strong> scales each channel
+          independently so its waveform shape stays visible.{" "}
+          <strong style={{ color: "var(--text-secondary)" }}>Envelope</strong> rectifies and
+          smooths, and shares one scale across all four channels — that view is where the
+          gesture&apos;s signature is legible, because it is the <em>ratio</em> between
+          channels, not any single one, that identifies the gesture. Absolute amplitudes
+          differ several-fold between people, which is exactly what the decoder must survive.
         </p>
       </Card>
     </Section>

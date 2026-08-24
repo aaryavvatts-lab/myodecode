@@ -38,12 +38,12 @@ export default function Calibration() {
         <LineChart
           series={series}
           height={300}
-          yDomain={[0.9, 0.98]}
+          yDomain={[0.88, 1.0]}
           xLabel="Seconds of labelled calibration data from the new wearer"
           yLabel="LOSO accuracy"
           xTicks={withN.map((r) => r.seconds)}
           fmtX={(v) => String(v)}
-          fmtY={(t) => `${((0.9 + t * 0.08) * 100).toFixed(0)}%`}
+          fmtY={(v) => `${(v * 100).toFixed(0)}%`}
           fmtTipX={(v) => (v === 0 ? "no calibration" : `${v} s total (${(v / 5).toFixed(1)} s per gesture)`)}
           fmtTipY={(v) => pct(v, 2)}
         />

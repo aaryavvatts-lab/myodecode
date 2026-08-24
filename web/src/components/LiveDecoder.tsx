@@ -4,13 +4,14 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import realtime from "@/results/realtime.json";
 import { CausalStandardiser, classify, extractFeatures, type LdaModel } from "@/lib/decoder";
 import { CHANNEL_COLORS, GESTURE_COLORS, GESTURE_NAMES } from "@/lib/palette";
-import { Card, Section, Stat, useTheme } from "./ui";
+import { Card, Section, Stat, useInView, useTheme } from "./ui";
 import { pct } from "@/lib/format";
 
 interface Meta {
   subject: number; fs: number; n_channels: number; n_samples: number;
   block_samples: number; block_order: number[];
-  window_samples: number; hop_samples: number; warmup_windows: number;
+  window_samples: number; hop_samples: number;
+  warmup_windows: number; warmup_seconds: number;
 }
 
 const DISPLAY_S = 3;
@@ -18,12 +19,13 @@ const DISPLAY_S = 3;
 export default function LiveDecoder() {
   const mode = useTheme();
   const canvas = useRef<HTMLCanvasElement | null>(null);
+  const [scopeWrap, scopeInView] = useInView<HTMLDivElement>();
   const [meta, setMeta] = useState<Meta | null>(null);
   const [model, setModel] = useState<LdaModel | null>(null);
   const sig = useRef<Float32Array | null>(null);
 
   const [playing, setPlaying] = useState(false);
-  const [speed, setSpeed] = useState(1);
+  const [speed, setSpeed] = useState(4);
   const [probs, setProbs] = useState<number[]>([0.2, 0.2, 0.2, 0.2, 0.2]);
   const [pred, setPred] = useState(0);
   const [truth, setTruth] = useState(0);
@@ -118,7 +120,7 @@ export default function LiveDecoder() {
   // scope
   useEffect(() => {
     const cv = canvas.current;
-    if (!cv || !meta || !sig.current) return;
+    if (!cv || !meta || !sig.current || !scopeInView) return;
     let id: number;
     const draw = () => {
       const dpr = window.devicePixelRatio || 1;
@@ -159,11 +161,11 @@ export default function LiveDecoder() {
       g.strokeStyle = mode === "dark" ? "rgba(255,255,255,0.35)" : "rgba(0,0,0,0.28)";
       g.lineWidth = 1;
       g.strokeRect(wx + 0.5, 0.5, ww, h - 1);
-      id = requestAnimationFrame(draw);
+      if (playing) id = requestAnimationFrame(draw);
     };
     id = requestAnimationFrame(draw);
     return () => cancelAnimationFrame(id);
-  }, [meta, mode]);
+  }, [meta, mode, scopeInView, playing]);
 
   const gcol = GESTURE_COLORS[mode];
   const live = decodes > 0 ? correct / decodes : 0;
@@ -210,7 +212,7 @@ export default function LiveDecoder() {
           </div>
         </div>
 
-        <div className="rounded-lg border" style={{ background: "var(--surface-2)" }}>
+        <div ref={scopeWrap} className="rounded-lg border" style={{ background: "var(--surface-2)" }}>
           <canvas ref={canvas} className="block h-[180px] w-full" />
         </div>
         <p className="mt-2 text-[11px]" style={{ color: "var(--text-muted)" }}>
@@ -221,7 +223,7 @@ export default function LiveDecoder() {
         {warming && playing && (
           <div className="mt-4 rounded-lg border p-3" style={{ background: "var(--warn-soft)" }}>
             <div className="mb-2 flex items-center justify-between text-[12px]" style={{ color: "var(--warn)" }}>
-              <span>Calibrating the running normaliser on unlabelled signal…</span>
+              <span>Warming up on unlabelled signal ({meta?.warmup_seconds ?? 10}s of wear)…</span>
               <span className="tnum font-[family-name:var(--font-mono)]">{Math.round(warm * 100)}%</span>
             </div>
             <div className="h-1.5 overflow-hidden rounded-full" style={{ background: "var(--surface-3)" }}>
@@ -300,6 +302,35 @@ export default function LiveDecoder() {
         <Stat value={pct(realtime.normalisation.causal_ema.accuracy_transition)} label="Mid-gesture-change"
               sub="Nobody can be right here — the window straddles two gestures" tone="warn" />
       </div>
+
+      <Card className="mt-4">
+        <h3 className="mb-1 text-[14px] font-medium">How long before it works at all?</h3>
+        <p className="mb-4 text-[13px]" style={{ color: "var(--text-secondary)" }}>
+          The running normaliser needs to see enough signal to estimate the wearer&apos;s
+          statistics. Until it has, the decoder is guessing. This is a real cost of
+          the calibration-free approach, and nobody reports it.
+        </p>
+        <div className="space-y-1.5">
+          {realtime.warmup_curve.map((w) => (
+            <div key={w.warmup_s} className="grid grid-cols-[3.6rem_1fr_3.4rem] items-center gap-3">
+              <span className="tnum font-[family-name:var(--font-mono)] text-[12px]"
+                    style={{ color: "var(--text-secondary)" }}>{w.warmup_s}s</span>
+              <div className="h-5 rounded-[4px]" style={{ background: "var(--surface-2)" }}>
+                <div className="h-full rounded-[4px]"
+                     style={{ width: `${w.accuracy_steady * 100}%`,
+                              background: w.warmup_s === realtime.demo_warmup_s ? "var(--accent)" : "var(--border-strong)" }} />
+              </div>
+              <span className="tnum text-right font-[family-name:var(--font-mono)] text-[12px]">
+                {pct(w.accuracy_steady, 1)}
+              </span>
+            </div>
+          ))}
+        </div>
+        <p className="mt-3 text-[12px]" style={{ color: "var(--text-muted)" }}>
+          Highlighted bar is the {realtime.demo_warmup_s}s the demo above uses. Two seconds of
+          wear is not enough — accuracy collapses to {pct(realtime.warmup_curve[0].accuracy_steady, 0)}.
+        </p>
+      </Card>
 
       <Card className="mt-4">
         <h3 className="mb-1 text-[14px] font-medium">The number the offline score was hiding</h3>

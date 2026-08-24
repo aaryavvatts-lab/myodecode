@@ -72,13 +72,13 @@ export default function Latency() {
         <LineChart
           series={series}
           height={340}
-          yDomain={[0.75, 1]}
+          yDomain={[0.74, 1.0]}
           xLabel={xAxis === "window" ? "Window length (ms, log scale)" : "End-to-end latency (ms, log scale)"}
           yLabel="LOSO accuracy"
           logScale
           xTicks={[25, 50, 100, 200, 400, 1000]}
           fmtX={(v) => String(Math.round(v))}
-          fmtY={(t) => `${Math.round((0.75 + t * 0.25) * 100)}%`}
+          fmtY={(v) => `${Math.round(v * 100)}%`}
           fmtTipX={(v) => `${Math.round(v)} ms`}
           fmtTipY={(v) => pct(v, 1)}
           annotations={[{ x: best.knee_window_ms, label: `knee ${best.knee_window_ms} ms` }]}

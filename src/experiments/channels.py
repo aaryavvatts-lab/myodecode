@@ -12,6 +12,7 @@ from itertools import combinations
 from ..models import make_lda
 from ..sk_runner import run_sklearn
 from ..train import run_cnn_loso
+from . import _checkpoint as ckpt
 from ._common import epochs, features, ms, save
 
 
@@ -21,8 +22,15 @@ def all_subsets(n: int = 4):
 
 
 def main(window_ms: int = 250, cnn: bool = True, cnn_epochs: int = 40):
+    done = ckpt.load("channels")
     rows = []
     for chs in all_subsets():
+        key = "-".join(str(c + 1) for c in chs)
+        if key in done:
+            rows.append(done[key])
+            print(f"  ch[{key}]  (cached)  "
+                  f"lda+zn={done[key]['models']['td_lda_znorm']['accuracy']:.4f}", flush=True)
+            continue
         ep = epochs(window_ms, tuple(chs))
         F = features(ep)
         r = run_sklearn(make_lda, F, ep, "loso", "td_lda_znorm", znorm=True)
@@ -34,7 +42,8 @@ def main(window_ms: int = 250, cnn: bool = True, cnn_epochs: int = 40):
             row["models"]["cnn_latent_logreg"] = lat.to_dict()
             line += f"  cnn_lat={lat.accuracy:.4f}"
         rows.append(row)
-        print(line)
+        ckpt.put("channels", key, row)
+        print(line, flush=True)
 
     frontier = {}
     for m in rows[0]["models"]:

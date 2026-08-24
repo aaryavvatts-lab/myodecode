@@ -43,3 +43,18 @@ export const GESTURE_NAMES = ["Rest", "Gesture 1", "Gesture 2", "Gesture 3", "Ge
 
 /** Marker shapes give gesture identity a second, colour-independent channel. */
 export const GESTURE_SHAPES = ["circle", "square", "triangle", "diamond", "cross"] as const;
+
+/** Relative luminance (WCAG). Used to pick readable text on a coloured chip. */
+export function luminance(hex: string): number {
+  const c = hex.replace("#", "");
+  const v = [0, 2, 4].map((i) => {
+    const x = parseInt(c.slice(i, i + 2), 16) / 255;
+    return x <= 0.03928 ? x / 12.92 : ((x + 0.055) / 1.055) ** 2.4;
+  });
+  return 0.2126 * v[0] + 0.7152 * v[1] + 0.0722 * v[2];
+}
+
+/** Black or white, whichever has more contrast against `hex`. */
+export function onColor(hex: string): string {
+  return luminance(hex) > 0.42 ? "#121211" : "#ffffff";
+}

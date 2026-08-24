@@ -5,14 +5,15 @@ import leakage from "@/results/leakage.json";
 import latency from "@/results/latency.json";
 import { CHANNEL_COLORS } from "@/lib/palette";
 import { pct } from "@/lib/format";
-import { useTheme } from "./ui";
+import { useInView, useTheme } from "./ui";
 
 function Scope() {
   const cv = useRef<HTMLCanvasElement | null>(null);
+  const [wrap, inView] = useInView<HTMLDivElement>();
   const mode = useTheme();
   useEffect(() => {
     const c = cv.current;
-    if (!c) return;
+    if (!c || !inView) return;
     let id = 0, t = 0;
     const cols = CHANNEL_COLORS[mode];
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -55,8 +56,8 @@ function Scope() {
     };
     id = requestAnimationFrame(draw);
     return () => cancelAnimationFrame(id);
-  }, [mode]);
-  return <canvas ref={cv} className="block h-full w-full" aria-hidden />;
+  }, [mode, inView]);
+  return <div ref={wrap} className="h-full w-full"><canvas ref={cv} className="block h-full w-full" aria-hidden /></div>;
 }
 
 export default function Hero() {

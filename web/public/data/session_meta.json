@@ -68,7 +68,8 @@
   ],
   "window_samples": 250,
   "hop_samples": 25,
-  "warmup_windows": 800,
+  "warmup_windows": 400,
+  "warmup_seconds": 10.0,
   "train_mu": [
     -4.385801792144775,
     -4.131682872772217,

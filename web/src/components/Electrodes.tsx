@@ -3,7 +3,7 @@
 import { useState } from "react";
 import channels from "@/results/channels.json";
 import tradeoff from "@/results/tradeoff.json";
-import { CHANNEL_COLORS, sequentialColor } from "@/lib/palette";
+import { CHANNEL_COLORS, onColor, sequentialColor } from "@/lib/palette";
 import { Card, Section, Stat, TableView, useTheme } from "./ui";
 import { pct } from "@/lib/format";
 
@@ -58,7 +58,7 @@ export default function Electrodes() {
               aria-pressed={on.includes(c)}
               className="focusable flex items-center gap-2 rounded-lg border px-3.5 py-2 text-[13px] font-medium transition-colors"
               style={on.includes(c)
-                ? { background: ccol[c - 1], color: mode === "dark" && c <= 2 ? "#121211" : "#fff", borderColor: ccol[c - 1] }
+                ? { background: ccol[c - 1], color: onColor(ccol[c - 1]), borderColor: ccol[c - 1] }
                 : { color: "var(--text-muted)" }}>
               <span className="inline-block h-2.5 w-2.5 rounded-full"
                     style={{ background: on.includes(c) ? "currentColor" : "var(--border-strong)" }} />
@@ -93,15 +93,15 @@ export default function Electrodes() {
             {[1, 2, 3, 4].map((n) => {
               const f = frontier[String(n)];
               return (
-                <div key={n} className="grid grid-cols-[auto_1fr_auto] items-center gap-3">
-                  <span className="w-20 text-[13px]">{n} electrode{n > 1 ? "s" : ""}</span>
-                  <div className="relative h-6 rounded-[4px]" style={{ background: "var(--surface-2)" }}>
+                <div key={n} className="grid grid-cols-[5.4rem_1fr_4.2rem_3.4rem] items-center gap-2">
+                  <span className="text-[13px]">{n} electrode{n > 1 ? "s" : ""}</span>
+                  <div className="h-6 rounded-[4px]" style={{ background: "var(--surface-2)" }}>
                     <div className="h-full rounded-[4px]"
                          style={{ width: `${f.accuracy * 100}%`, background: sequentialColor(0.3 + n * 0.17) }} />
-                    <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[11px]"
-                          style={{ color: "var(--text-muted)" }}>ch {f.channels.join("+")}</span>
                   </div>
-                  <span className="tnum w-14 text-right font-[family-name:var(--font-mono)] text-[13px]">
+                  <span className="font-[family-name:var(--font-mono)] text-[11px]"
+                        style={{ color: "var(--text-muted)" }}>ch {f.channels.join("+")}</span>
+                  <span className="tnum text-right font-[family-name:var(--font-mono)] text-[13px]">
                     {pct(f.accuracy)}
                   </span>
                 </div>
@@ -119,13 +119,13 @@ export default function Electrodes() {
           <h3 className="mb-4 text-[14px] font-medium">What each electrode knows alone</h3>
           <div className="space-y-2.5">
             {singles.map((s) => (
-              <div key={s.channels[0]} className="grid grid-cols-[auto_1fr_auto] items-center gap-3">
-                <span className="w-20 text-[13px]">Channel {s.channels[0]}</span>
+              <div key={s.channels[0]} className="grid grid-cols-[5.4rem_1fr_3.4rem] items-center gap-2">
+                <span className="text-[13px]">Channel {s.channels[0]}</span>
                 <div className="h-6 rounded-[4px]" style={{ background: "var(--surface-2)" }}>
                   <div className="h-full rounded-[4px]"
                        style={{ width: `${s.models.td_lda_znorm.accuracy * 100}%`, background: ccol[s.channels[0] - 1] }} />
                 </div>
-                <span className="tnum w-14 text-right font-[family-name:var(--font-mono)] text-[13px]">
+                <span className="tnum text-right font-[family-name:var(--font-mono)] text-[13px]">
                   {pct(s.models.td_lda_znorm.accuracy)}
                 </span>
               </div>

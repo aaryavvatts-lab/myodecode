@@ -153,6 +153,21 @@ export function useElementWidth<T extends HTMLElement>() {
   return [ref, w] as const;
 }
 
+/** True while the element is on screen. Used to park animation loops that would
+ *  otherwise burn a core continuously on a page this long. */
+export function useInView<T extends HTMLElement>(rootMargin = "200px") {
+  const ref = useRef<T | null>(null);
+  const [inView, setInView] = useState(false);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const io = new IntersectionObserver(([e]) => setInView(e.isIntersecting), { rootMargin });
+    io.observe(el);
+    return () => io.disconnect();
+  }, [rootMargin]);
+  return [ref, inView] as const;
+}
+
 export function useTheme(): "light" | "dark" {
   const [mode, setMode] = useState<"light" | "dark">("light");
   useEffect(() => {

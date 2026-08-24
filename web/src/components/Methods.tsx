@@ -46,12 +46,12 @@ export default function Methods() {
               names like &ldquo;fist&rdquo; or &ldquo;pinch&rdquo;.
             </li>
             <li>
-              <strong style={{ color: "var(--text-primary)" }}>One session per person.</strong>
+              <strong style={{ color: "var(--text-primary)" }}>One session per person.</strong>{" "}
               Electrodes were never removed and reapplied, so nothing here measures the
               across-session drift that breaks real devices. Expect worse.
             </li>
             <li>
-              <strong style={{ color: "var(--text-primary)" }}>Provenance is unresolved.</strong>
+              <strong style={{ color: "var(--text-primary)" }}>Provenance is unresolved.</strong>{" "}
               The source publication for this dataset was not available, and searching did not
               identify it. Electrode placement is therefore unknown; channels are referred to
               by number only.

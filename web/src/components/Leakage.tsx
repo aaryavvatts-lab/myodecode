@@ -86,8 +86,20 @@ export default function Leakage() {
             max={1}
             color={row.honest ? "var(--accent)" : "var(--warn)"}
             highlight={row.scheme === "loso"}
+            refLine={honest}
           />
         ))}
+        <p className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px]" style={{ color: "var(--text-muted)" }}>
+          <span className="inline-flex items-center gap-1.5">
+            <span className="inline-block h-3 w-px" style={{ background: "var(--text-primary)", opacity: 0.75 }} />
+            honest baseline ({pct(honest)})
+          </span>
+          <span className="inline-flex items-center gap-1.5">
+            <span className="inline-block h-3 w-4 rounded-[2px]"
+                  style={{ backgroundImage: "repeating-linear-gradient(135deg, var(--text-muted) 0 2px, transparent 2px 5px)" }} />
+            hatched: accuracy that only exists because of the leak
+          </span>
+        </p>
         <button onClick={() => setShowAll(!showAll)}
                 className="focusable mt-3 font-[family-name:var(--font-mono)] text-[11px] uppercase tracking-wider underline underline-offset-4"
                 style={{ color: "var(--text-muted)" }}>
@@ -117,18 +129,18 @@ export default function Leakage() {
         <Card>
           <h3 className="mb-1 text-[14px] font-medium">Where the leak actually is</h3>
           <p className="text-[13px] leading-relaxed" style={{ color: "var(--text-secondary)" }}>
-            Blocking in time recovers{" "}
+            Simply splitting each recording in time — while still training on the very
+            same people — drops accuracy from{" "}
+            <strong style={{ color: "var(--text-primary)" }}>{pct(top)}</strong> to{" "}
             <strong style={{ color: "var(--text-primary)" }}>
-              {pct(Math.abs(find("blocked", "td_lda").accuracy - top), 1)}
-            </strong>{" "}
-            of the {pct(Math.abs(honest - top), 1)} gap on its own, and the blocked score
-            lands within{" "}
-            <strong style={{ color: "var(--text-primary)" }}>
-              {(Math.abs(find("blocked", "td_lda").accuracy - honest) * 100).toFixed(1)} pp
-            </strong>{" "}
-            of never showing the model the test subject at all. So the inflation is not
-            mainly about person-to-person differences, which is where the field usually
-            points. It is about training and testing on windows that overlap in time.
+              {pct(find("blocked", "td_lda").accuracy)}
+            </strong>. Removing the test subject from training altogether gives{" "}
+            <strong style={{ color: "var(--text-primary)" }}>{pct(honest)}</strong> —
+            statistically the same number. Whether the model has ever met the wearer
+            turns out to be worth almost nothing here; what mattered was that the
+            original split let it train on windows overlapping the ones it was tested
+            on. The field usually blames the cross-subject gap. On this dataset, the
+            gap is the clock.
           </p>
         </Card>
         <Card>
