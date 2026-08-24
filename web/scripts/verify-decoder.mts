@@ -8,7 +8,7 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
-import { CausalStandardiser, classify, extractFeatures, type LdaModel } from "../src/lib/decoder";
+import { CausalGain, CausalStandardiser, classify, extractFeatures, type LdaModel } from "../src/lib/decoder";
 
 const PUB = join(import.meta.dirname, "..", "public");
 const RESULTS = join(import.meta.dirname, "..", "src", "results");
@@ -73,3 +73,62 @@ if (steady < 0.9) {
   process.exit(1);
 }
 console.log(`\n  OK — browser decoder matches Python within ${(drift * 100).toFixed(2)} pp.`);
+
+
+// ---------------------------------------------------------------------------
+// Second decoder: the CNN, through the same causal gain the browser applies.
+// ---------------------------------------------------------------------------
+const ort = await import("onnxruntime-web");
+ort.env.wasm.numThreads = 1;
+ort.env.logLevel = "error";
+
+const cnnMeta = JSON.parse(readFileSync(join(PUB, "model", "cnn_meta.json"), "utf8"));
+const sess = await ort.InferenceSession.create(join(PUB, "model", "cnn.onnx"), {
+  executionProviders: ["wasm"],
+});
+const inName = sess.inputNames[0];
+const outName = sess.outputNames[0];
+
+const gain = new CausalGain(2 * meta.fs);
+let cnnPure = 0, cnnOk = 0;
+const tc0 = performance.now();
+let cnnRuns = 0;
+
+for (let pos = 0; pos + W <= meta.n_samples; pos += hop) {
+  const from = Math.max(0, pos + W - hop);
+  const frame = new Array<number>(C);
+  for (let t = from; t < pos + W; t++) {
+    for (let c = 0; c < C; c++) frame[c] = sig[t * C + c];
+    gain.push(frame);
+  }
+  if (pos < warmup_windows * hop) continue;
+
+  const g = gain.value();
+  const flat = new Float32Array(C * W);
+  for (let c = 0; c < C; c++) {
+    for (let t = 0; t < W; t++) flat[c * W + t] = sig[(pos + t) * C + c] / g;
+  }
+  const out = await sess.run({ [inName]: new ort.Tensor("float32", flat, [1, C, W]) });
+  const logits = Array.from(out[outName].data as Float32Array);
+  const pred = logits.indexOf(Math.max(...logits));
+  cnnRuns++;
+
+  const endSample = pos + W - 1;
+  const truth = meta.block_order[Math.min(meta.block_order.length - 1, Math.floor(endSample / B))];
+  if (Math.floor(pos / B) === Math.floor(endSample / B)) {
+    cnnPure++; if (pred === truth) cnnOk++;
+  }
+}
+const cnnElapsed = performance.now() - tc0;
+const cnnAcc = cnnOk / cnnPure;
+
+console.log(`\n  CNN (${(cnnMeta.onnx_bytes / 1024).toFixed(0)} KB ONNX, causal gain)`);
+console.log(`  steady-state acc   ${(cnnAcc * 100).toFixed(2)}%`);
+console.log(`  per-window compute ${(cnnElapsed / cnnRuns).toFixed(2)} ms`);
+console.log(`  linear model is    ${((steady - cnnAcc) * 100).toFixed(2)} pp ahead`);
+
+if (cnnAcc < 0.85) {
+  console.error(`\n  FAIL: CNN accuracy ${(cnnAcc * 100).toFixed(1)}% is implausibly low — check the gain path.`);
+  process.exit(1);
+}
+console.log(`\n  OK — both decoders verified.`);

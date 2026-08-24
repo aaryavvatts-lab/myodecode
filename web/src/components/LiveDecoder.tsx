@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import realtime from "@/results/realtime.json";
-import { CausalStandardiser, classify, extractFeatures, type LdaModel } from "@/lib/decoder";
+import { CausalGain, CausalStandardiser, classify, extractFeatures, type LdaModel } from "@/lib/decoder";
 import { CHANNEL_COLORS, GESTURE_COLORS, GESTURE_NAMES } from "@/lib/palette";
 import { Card, Section, Stat, useInView, useTheme } from "./ui";
 import { pct } from "@/lib/format";
@@ -15,6 +15,50 @@ interface Meta {
 }
 
 const DISPLAY_S = 3;
+
+function DecoderPanel({ title, subtitle, probs, pred, disabled, acc, n, ms, gcol }: {
+  title: string; subtitle: string; probs: number[]; pred: number; disabled: boolean;
+  acc: number | null; n: number; ms: number; gcol: string[];
+}) {
+  return (
+    <div className="rounded-lg border p-4">
+      <div className="mb-3 flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+        <div>
+          <div className="text-[13px] font-medium">{title}</div>
+          <div className="text-[11px]" style={{ color: "var(--text-muted)" }}>{subtitle}</div>
+        </div>
+        <div className="flex items-baseline gap-3 text-[11px]" style={{ color: "var(--text-muted)" }}>
+          <span className="tnum font-[family-name:var(--font-mono)]">{ms.toFixed(2)} ms</span>
+          <span className="tnum font-[family-name:var(--font-mono)] text-[14px]"
+                style={{ color: "var(--text-primary)" }}>
+            {acc === null ? "—" : pct(acc, 1)}
+          </span>
+        </div>
+      </div>
+      <div className="space-y-1.5">
+        {GESTURE_NAMES.map((name, i) => (
+          <div key={i} className="grid grid-cols-[5.5rem_1fr_2.6rem] items-center gap-2">
+            <span className="text-[12px]" style={{
+              color: i === pred && !disabled ? "var(--text-primary)" : "var(--text-secondary)",
+              fontWeight: i === pred && !disabled ? 600 : 400,
+            }}>{name}</span>
+            <div className="h-4 rounded-[4px]" style={{ background: "var(--surface-2)" }}>
+              <div className="h-full rounded-[4px] transition-[width] duration-100"
+                   style={{ width: `${(probs[i] ?? 0) * 100}%`, background: gcol[i] }} />
+            </div>
+            <span className="tnum text-right font-[family-name:var(--font-mono)] text-[10px]"
+                  style={{ color: "var(--text-muted)" }}>
+              {Math.round((probs[i] ?? 0) * 100)}%
+            </span>
+          </div>
+        ))}
+      </div>
+      <div className="mt-2 text-[11px]" style={{ color: "var(--text-muted)" }}>
+        {n > 0 ? `${n} steady-state windows scored` : "waiting for warm-up"}
+      </div>
+    </div>
+  );
+}
 
 export default function LiveDecoder() {
   const mode = useTheme();
@@ -35,6 +79,19 @@ export default function LiveDecoder() {
   const [computeMs, setComputeMs] = useState(0);
   const [err, setErr] = useState<string | null>(null);
 
+  // second decoder: the reel's CNN, run in WASM, racing the linear model
+  // Typed structurally so the onnxruntime module stays out of this chunk entirely.
+  const cnn = useRef<{ run(w: Float32Array): Promise<{ probs: number[]; pred: number; ms: number }> } | null>(null);
+  const [cnnState, setCnnState] = useState<"off" | "loading" | "on" | "failed">("off");
+  const [cnnErr, setCnnErr] = useState<string | null>(null);
+  const [cnnProbs, setCnnProbs] = useState<number[]>([0.2, 0.2, 0.2, 0.2, 0.2]);
+  const [cnnPred, setCnnPred] = useState(-1);
+  const [cnnDecodes, setCnnDecodes] = useState(0);
+  const [cnnCorrect, setCnnCorrect] = useState(0);
+  const [cnnMs, setCnnMs] = useState(0);
+  const gain = useRef<CausalGain | null>(null);
+  const cnnBusy = useRef(false);
+
   const pos = useRef(0);
   const std = useRef<CausalStandardiser | null>(null);
   const raf = useRef<number | null>(null);
@@ -54,6 +111,7 @@ export default function LiveDecoder() {
         setModel(m);
         setMeta(mt);
         std.current = new CausalStandardiser(m.n_features, mt.warmup_windows, mt.warmup_windows);
+        gain.current = new CausalGain(2 * mt.fs);
       } catch {
         if (!dead) setErr("Could not load the decoder assets.");
       }
@@ -63,16 +121,47 @@ export default function LiveDecoder() {
 
   const reset = useCallback(() => {
     pos.current = 0;
-    if (model && meta) std.current = new CausalStandardiser(model.n_features, meta.warmup_windows, meta.warmup_windows);
+    if (model && meta) {
+      std.current = new CausalStandardiser(model.n_features, meta.warmup_windows, meta.warmup_windows);
+      gain.current = new CausalGain(2 * meta.fs);
+    }
     setDecodes(0); setCorrect(0); setWarm(0);
     setProbs([0.2, 0.2, 0.2, 0.2, 0.2]); setPred(0); setTruth(0);
+    setCnnDecodes(0); setCnnCorrect(0); setCnnPred(-1);
+    setCnnProbs([0.2, 0.2, 0.2, 0.2, 0.2]);
   }, [model, meta]);
+
+  const enableCnn = useCallback(async () => {
+    if (cnnState !== "off") return;
+    setCnnState("loading");
+    try {
+      // Imported here, not at module scope: pulling onnxruntime-web into the
+      // initial bundle costs every visitor a chunk they will probably never run.
+      const { createCnn } = await import("@/lib/onnx");
+      cnn.current = await createCnn();
+      setCnnState("on");
+    } catch (e) {
+      console.error("CNN load failed:", e);
+      setCnnErr(e instanceof Error ? e.message : String(e));
+      setCnnState("failed");
+    }
+  }, [cnnState]);
 
   const step = useCallback(() => {
     if (!model || !meta || !sig.current || !std.current) return;
     const { window_samples: W, hop_samples: hop, n_channels: C, block_samples: B } = meta;
     const total = meta.n_samples;
     if (pos.current + W >= total) pos.current = 0;
+
+    // advance the causal RMS gain over the samples newly entering the stream
+    if (gain.current) {
+      const from = Math.max(0, pos.current + W - hop);
+      const frame: number[] = new Array(C);
+      for (let t = from; t < pos.current + W; t++) {
+        for (let c = 0; c < C; c++) frame[c] = sig.current[t * C + c];
+        gain.current.push(frame);
+      }
+    }
 
     const win: Float32Array[] = [];
     for (let c = 0; c < C; c++) {
@@ -90,6 +179,27 @@ export default function LiveDecoder() {
     const endSample = pos.current + W - 1;
     const gt = meta.block_order[Math.min(meta.block_order.length - 1, Math.floor(endSample / B))];
     const pure = Math.floor(pos.current / B) === Math.floor(endSample / B);
+
+    // The CNN takes the same window, scaled by a causal RMS gain -- the online
+    // stand-in for the per-subject gain it was trained with. It is skipped rather
+    // than queued if it has not finished the previous window, so a slow decoder
+    // drops frames instead of falling behind, exactly as it would on a device.
+    if (cnn.current && ready && !cnnBusy.current && gain.current) {
+      cnnBusy.current = true;
+      const g = gain.current.value();
+      const flat = new Float32Array(C * W);
+      for (let c = 0; c < C; c++) {
+        for (let t = 0; t < W; t++) flat[c * W + t] = win[c][t] / g;
+      }
+      const gtNow = gt, pureNow = pure;
+      cnn.current.run(flat).then((r) => {
+        setCnnProbs(r.probs); setCnnPred(r.pred); setCnnMs(r.ms);
+        if (pureNow) {
+          setCnnDecodes((d) => d + 1);
+          if (r.pred === gtNow) setCnnCorrect((c2) => c2 + 1);
+        }
+      }).catch(() => setCnnState("failed")).finally(() => { cnnBusy.current = false; });
+    }
 
     setComputeMs(dt);
     setProbs(p);
@@ -237,26 +347,46 @@ export default function LiveDecoder() {
         )}
 
         <div className="mt-5 grid gap-5 md:grid-cols-[minmax(0,1fr)_minmax(0,15rem)]">
-          <div>
-            <div className="mb-2 text-[12px]" style={{ color: "var(--text-muted)" }}>Decoder output</div>
-            <div className="space-y-1.5">
-              {GESTURE_NAMES.map((name, i) => (
-                <div key={i} className="grid grid-cols-[5.5rem_1fr_3rem] items-center gap-2">
-                  <span className="text-[13px]" style={{
-                    color: i === pred && !warming ? "var(--text-primary)" : "var(--text-secondary)",
-                    fontWeight: i === pred && !warming ? 600 : 400,
-                  }}>{name}</span>
-                  <div className="h-5 rounded-[4px]" style={{ background: "var(--surface-2)" }}>
-                    <div className="h-full rounded-[4px] transition-[width] duration-100"
-                         style={{ width: `${(probs[i] ?? 0) * 100}%`, background: gcol[i] }} />
-                  </div>
-                  <span className="tnum text-right font-[family-name:var(--font-mono)] text-[11px]"
-                        style={{ color: "var(--text-muted)" }}>
-                    {Math.round((probs[i] ?? 0) * 100)}%
-                  </span>
-                </div>
-              ))}
-            </div>
+          <div className="space-y-5">
+            <DecoderPanel
+              title="Time-domain features + LDA"
+              subtitle="20 numbers, one matrix multiply"
+              probs={probs} pred={pred} disabled={warming}
+              acc={decodes ? correct / decodes : null} n={decodes}
+              ms={computeMs} gcol={gcol}
+            />
+
+            {cnnState === "on" ? (
+              <DecoderPanel
+                title="CNN encoder → latent → classifier"
+                subtitle="53k parameters, running in WebAssembly"
+                probs={cnnProbs} pred={cnnPred} disabled={warming || cnnPred < 0}
+                acc={cnnDecodes ? cnnCorrect / cnnDecodes : null} n={cnnDecodes}
+                ms={cnnMs} gcol={gcol}
+              />
+            ) : (
+              <div className="rounded-lg border border-dashed p-4">
+                <div className="text-[13px] font-medium">CNN encoder → latent → classifier</div>
+                <p className="mt-1 text-[12px] leading-relaxed" style={{ color: "var(--text-muted)" }}>
+                  Run the reel&apos;s architecture alongside the linear model and watch them
+                  race on the same windows. Needs an 11 MB WebAssembly runtime, so it only
+                  downloads if you ask for it.
+                </p>
+                <button
+                  onClick={enableCnn}
+                  disabled={cnnState === "loading" || cnnState === "failed"}
+                  className="focusable mt-3 rounded-lg border px-3 py-1.5 text-[12px] font-medium disabled:opacity-50">
+                  {cnnState === "loading" ? "Loading runtime…"
+                    : cnnState === "failed" ? "Failed to load — the linear decoder is unaffected"
+                    : "Load the CNN and race them"}
+                </button>
+                {cnnErr && (
+                  <p className="mt-2 font-[family-name:var(--font-mono)] text-[11px]" style={{ color: "var(--warn)" }}>
+                    {cnnErr}
+                  </p>
+                )}
+              </div>
+            )}
           </div>
 
           <div className="rounded-lg border p-4" style={{ background: "var(--surface-2)" }}>
@@ -267,29 +397,33 @@ export default function LiveDecoder() {
               <span className="inline-block h-3 w-3 rounded-full" style={{ background: gcol[truth] }} />
               {GESTURE_NAMES[truth]}
             </div>
-            <div className="mt-4 text-[11px] uppercase tracking-wider" style={{ color: "var(--text-muted)" }}>
-              Predicted
-            </div>
-            <div className="mt-1 flex items-center gap-2 text-[18px] font-medium"
-                 style={{ color: warming ? "var(--text-muted)" : pred === truth ? "var(--text-primary)" : "var(--warn)" }}>
-              <span className="inline-block h-3 w-3 rounded-full"
-                    style={{ background: warming ? "var(--border-strong)" : gcol[pred] }} />
-              {warming ? "—" : GESTURE_NAMES[pred]}
-            </div>
             <dl className="mt-4 space-y-1.5 border-t pt-3 text-[12px]">
               <div className="flex justify-between">
-                <dt style={{ color: "var(--text-muted)" }}>Live accuracy</dt>
-                <dd className="tnum font-[family-name:var(--font-mono)]">{decodes ? pct(live, 1) : "—"}</dd>
+                <dt style={{ color: "var(--text-muted)" }}>Subject</dt>
+                <dd className="tnum font-[family-name:var(--font-mono)]">{meta?.subject ?? "—"} (held out)</dd>
               </div>
               <div className="flex justify-between">
-                <dt style={{ color: "var(--text-muted)" }}>Decodes</dt>
-                <dd className="tnum font-[family-name:var(--font-mono)]">{decodes}</dd>
+                <dt style={{ color: "var(--text-muted)" }}>Window</dt>
+                <dd className="tnum font-[family-name:var(--font-mono)]">{meta?.window_samples ?? "—"} samples</dd>
               </div>
               <div className="flex justify-between">
-                <dt style={{ color: "var(--text-muted)" }}>Compute</dt>
-                <dd className="tnum font-[family-name:var(--font-mono)]">{computeMs.toFixed(2)} ms</dd>
+                <dt style={{ color: "var(--text-muted)" }}>Hop</dt>
+                <dd className="tnum font-[family-name:var(--font-mono)]">{meta?.hop_samples ?? "—"} samples</dd>
               </div>
             </dl>
+            {cnnState === "on" && cnnDecodes > 0 && decodes > 0 && (
+              <p className="mt-3 border-t pt-3 text-[12px] leading-relaxed" style={{ color: "var(--text-secondary)" }}>
+                On the windows both have scored, the linear model is{" "}
+                <strong style={{ color: "var(--text-primary)" }}>
+                  {(((correct / decodes) - (cnnCorrect / cnnDecodes)) * 100).toFixed(1)} pp
+                </strong>{" "}
+                ahead, at{" "}
+                <strong style={{ color: "var(--text-primary)" }}>
+                  {(cnnMs / Math.max(computeMs, 1e-6)).toFixed(0)}×
+                </strong>{" "}
+                less compute.
+              </p>
+            )}
           </div>
         </div>
       </Card>

@@ -127,11 +127,18 @@ export function classify(model: LdaModel, z: Float64Array): { probs: number[]; p
   return { probs, pred: scores.indexOf(max) };
 }
 
-/** Running RMS gain, the causal stand-in for the CNN's per-subject gain divisor. */
+/**
+ * Running RMS gain: the causal stand-in for the CNN's per-subject gain divisor.
+ *
+ * Offline the CNN's inputs are divided by the RMS of that subject's entire
+ * recording. A device cannot know that at power-on, so this tracks it with an
+ * exponential moving average over the samples seen so far.
+ */
 export class CausalGain {
   private run = 0;
   private seen = 0;
   constructor(private tauSamples: number) {}
+
   push(frame: number[]): number {
     let inst = 0;
     for (const v of frame) inst += v * v;
@@ -139,6 +146,10 @@ export class CausalGain {
     if (this.seen === 0) this.run = inst;
     else this.run += (1 / this.tauSamples) * (inst - this.run);
     this.seen++;
+    return this.value();
+  }
+
+  value(): number {
     return Math.sqrt(Math.max(this.run, 1e-12));
   }
 }
