@@ -65,7 +65,7 @@ def fig_leakage():
     ax.set_xticks(x, labels)
     ax.set_ylim(0, 1.12)
     ax.set_ylabel("Accuracy")
-    ax.set_title("Same model, same data — only the split changes", loc="left", fontweight="bold")
+    ax.set_title("Same model, same data - only the split changes", loc="left", fontweight="bold")
     ax.set_axisbelow(True)
     save(fig, "01_leakage_ladder")
 

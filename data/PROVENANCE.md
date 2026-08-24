@@ -41,7 +41,7 @@ their measured activation signatures rather than given invented gesture names:
 
 | Class | Channel share (ch1–ch4) | Total activation | Dominant channel |
 |---|---|---|---|
-| 0 | 25% / 34% / 21% / 20% | 0.75× | — (rest) |
+| 0 | 25% / 34% / 21% / 20% | 0.75x | none, this is rest |
 | 1 | 16% / 18% / 40% / 26% | 6.76× | ch3, in 8/8 subjects |
 | 2 | 18% / 42% / 22% / 19% | 2.99× | ch2, in 8/8 subjects |
 | 3 | 16% / 20% / 35% / 30% | 4.39× | ch3, in 6/8 subjects |
@@ -52,5 +52,5 @@ their measured activation signatures rather than given invented gesture names:
 **No trial structure.** The envelope of each recording shows sustained and
 repeated contraction rather than discrete stimulus-locked trials, and there are no
 event markers. Windows are therefore cut by sliding a fixed window over the
-continuous recording — which is also why splitting those windows at random leaks
-so badly, and why this project measures that leak rather than ignoring it.
+continuous recording, which is also why splitting those windows at random
+leaks so badly, and why this project measures that leak rather than ignoring it.

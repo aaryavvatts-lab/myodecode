@@ -1,128 +1,143 @@
-# MyoDecode — how fast can you read a hand?
+# MyoDecode
 
-Decoding five hand gestures from four channels of surface EMG, with the evaluation
-done honestly.
+Reading hand gestures from four muscle sensors on a forearm, and checking how much of
+the accuracy people report for this task is actually real.
 
-**[Live site with the interactive results and an in-browser decoder →](https://myodecode.vercel.app)**
+**[Live site with the interactive results and a decoder you can run in your browser](https://myodecode.vercel.app)**
 
 ---
 
-## The short version
+## What this is
 
-The project started from a popular recipe: download EMG, stack the trials, run a CNN
-to get a latent vector, feed that to a simple classifier. Running it against the data
-first turned up two problems.
+There is a popular project idea that goes around: download some muscle signal data,
+chop it into windows, train a neural network to squeeze each window into a vector, then
+feed that vector to a simple classifier and predict the hand gesture. I built it. Then I
+ran some checks before writing anything up, and two things came out that changed what
+the project is about.
 
-**1. The task is already solved by a method from 1993.** Hudgins time-domain features
-into a linear discriminant reach **95.4%** leave-one-subject-out. The CNN encoder plus
-logistic regression — the recipe's own architecture, faithfully implemented — reaches
-**94.7%**. The deep model loses to twenty hand-computed numbers.
+**The neural network loses to a method from 1993.** Five simple measurements per sensor
+fed into a linear classifier gets 95.4% on a person it has never seen. The neural
+network version, built exactly as described, gets 94.7%. On streaming data the gap is
+bigger: 96.1% against 92.3%.
 
-**2. The recipe's train/test split leaks badly.** Each file is one continuous ~20 s
-recording of one gesture. Splitting those windows at random puts train and test
-samples milliseconds apart, from the same session and the same electrode placement.
+**The way the data usually gets split inflates the score by five points.** Each file is
+one continuous recording of one gesture, about twenty seconds long. If you cut it into
+windows and shuffle them before splitting, your test windows end up a few milliseconds
+away from your training windows, recorded in the same sitting with the sensors in the
+same spot. The model has basically already seen the answer.
 
-| Split | Accuracy | What it measures |
+| How the data is split | Accuracy | What it actually measures |
 |---|---|---|
-| Random, within one subject | **98.7%** | nothing — windows overlap in time |
-| Random, pooled across subjects | 95.2% | still leaking, just diluted |
-| Blocked in time | 93.3% | honest within-subject |
-| Leave one subject out | **93.4%** | honest cross-subject |
+| Shuffle one person's windows | **98.7%** | Nothing useful. Test windows sit next to training ones. |
+| Shuffle everyone together | 95.2% | Same problem, watered down |
+| Split each recording by time | 93.3% | Honest, same people |
+| Hold out a whole person | **93.4%** | Honest, new person |
 
-Note that blocking in time recovers nearly the whole gap, and lands within 0.1 pp of
-full subject holdout. The inflation is **not** mainly about person-to-person
-variation, which is where the field usually points. It is about training and testing
-on windows that overlap in time.
+The interesting part is the last two rows. Splitting by time recovers nearly all of the
+gap on its own, and lands within 0.1 points of never showing the model that person at
+all. So the problem was not that bodies are different, which is where people usually
+point. It was that the windows overlapped in time.
 
-A 200-run label-permutation test puts the null at 19.9% (p = 0.005), so the honest
-number is real — it is just five points lower than advertised.
+To make sure 93.4% is real and not an artifact of something else, I scrambled the labels
+200 times and re-ran the whole thing. With meaningless labels the model scores 19.9%,
+which is exactly what guessing between five options should give (p = 0.005).
 
-## So the project asks better questions instead
+## The questions I asked instead
 
-**How fast can you decide?** Accuracy against window length, with the hop held fixed
-so the curve is not confounded by training-set size. The knee sits well below the
-250 ms most papers use.
+**How fast can it decide?** Accuracy against how much signal it gets to see. I kept the
+step between windows fixed across the sweep, otherwise short windows train on far more
+data and the curve measures the wrong thing.
 
-**How few electrodes do you need?** All 15 channel subsets. Two electrodes reach
-about 92%; the best single electrode alone reaches about 81%, against 20% chance.
+**How few sensors do you need?** All fifteen combinations of the four sensors. Two
+sensors get about 92%. One sensor on its own gets about 81%, against 20% for guessing.
 
-**Should users do a calibration routine?** No. Standardising each wearer's features
-against their own *unlabelled* signal — free, instant, no cooperation — is worth
-**+2.0 pp**. Twelve seconds of *labelled* calibration on top of that is worth a
-further **+0.2 pp**, well inside the confidence interval.
+**Should users do a setup routine?** No. Rescaling each person's measurements against
+their own signal is free, needs no labels, and is worth 2.0 points. Twelve seconds of
+the user holding poses on top of that is worth another 0.2 points, which is inside the
+noise.
 
-**Where are the errors?** Not spread out — **82.8%** of every mistake is one pair of
-gestures being swapped for each other, and that pair is also the closest pair of class
-centroids in the decoder's own feature space. Rest is never confused with anything
-(100% recall): near-silence on four channels is not something an active gesture can
-imitate. For a product this reframes the result — five gestures at 95.4% is really four
-gestures at near-ceiling plus one ambiguous pair.
+**Where are the mistakes?** Not spread out. 82.8% of every mistake is one pair of
+gestures being swapped for each other, and that pair is also the closest pair in the
+numbers the decoder looks at. Rest is never confused with anything at all. For anyone
+building something with this, that reframes it: five gestures at 95.4% is really four
+gestures that work almost perfectly plus one pair that does not.
 
-**Does it survive streaming?** A synthesised session where the held-out wearer cycles
-gestures every two seconds, decoded causally. Online running normalisation costs only
-0.5 pp against the offline statistics the headline number quietly assumes. The real
-cost is elsewhere: windows straddling a gesture change score ~54%, and a per-window
-average that pools them reports 92.5% rather than the 97.2% steady-state figure.
+**Does it hold up on a live stream?** I spliced a fake session where a held out person
+switches gesture every two seconds, then decoded it causally. Estimating the rescaling
+on the fly instead of from the whole recording costs only 0.5 points. But the decoder
+needs about ten seconds of wear before it works at all: at two seconds it drops to 78%.
+I have not seen anyone report that warm-up cost.
 
-## Repository
+## Repository layout
 
 ```
-data/            40 recordings, subject_{1..8}/{0..4}.txt  + PROVENANCE.md
+data/            40 recordings, subject_{1..8}/{0..4}.txt, plus PROVENANCE.md
 src/
-  config.py      FS, class signatures, paths — one source of truth
-  data.py        loading, filtering, epoching, the four split schemes
-  features.py    Hudgins time-domain features
-  models.py      LDA/logreg baselines, the CNN encoder, augmentation
-  evaluate.py    metrics, bootstrap CIs over folds
-  train.py       LOSO training loop (MPS/CUDA/CPU)
-  experiments/   one file per result, each writing results/*.json
-  export.py      ONNX + linear-model export for the browser
-  figures.py     static figures from results/
-tests/           guardrails — see below
-web/             Next.js site, deployed to Vercel
+  config.py      sampling rate, class descriptions, paths. One place to change things.
+  data.py        loading, filtering, windowing, and the four ways of splitting
+  features.py    the five 1993 measurements
+  models.py      the linear baselines, the neural network, and the augmentation
+  evaluate.py    scoring, confidence ranges
+  train.py       the training loop
+  experiments/   one file per result, each writing to results/
+  export.py      exports the trained models for the browser
+  figures.py     static charts
+tests/           the checks that keep the claims honest
+web/             the site, deployed on Vercel
 ```
 
-## Reproducing
+## Running it yourself
 
 ```bash
 uv venv --python 3.12 .venv
 uv pip install --python .venv/bin/python -r requirements.txt
 .venv/bin/python -m pytest tests/ -q
-.venv/bin/python run_all.py            # ~2-3 h; --fast skips the CNN sweeps
+.venv/bin/python run_all.py            # a few hours. --fast skips the neural network sweeps
 .venv/bin/python sync_web.py && .venv/bin/python -m src.export
 .venv/bin/python -m src.figures
-cd web && npm install && npm run verify   # checks the browser decoder against Python
+cd web && npm install && npm run verify
 ```
 
-Seeds are fixed throughout. The web app refuses to build if any results file is still
-a placeholder.
+Random seeds are fixed, so you should get the numbers above. The site refuses to build
+if any results file is still a placeholder.
 
 ## The tests are the argument
 
-`tests/test_pipeline.py` asserts the claims this project rests on, so they cannot
-quietly rot:
+`tests/test_pipeline.py` checks the things this project depends on being true, so they
+cannot quietly break:
 
-- permuted labels score at chance (0.15–0.27)
-- leave-one-subject-out folds share no subject, and each test fold is exactly one person
-- the blocked split has a genuine temporal gap between train and test
-- no window spans two recordings, and windows match the source signal sample-for-sample
-- class 0 really is the quietest class, which is the entire basis for calling it Rest
-- **the leaky split beats the honest split** — the thesis, as an assertion
+- scrambled labels score at chance
+- no person appears in both training and testing
+- the time based split really has a gap in the middle
+- no window spans two recordings, and windows match the source signal sample for sample
+- class 0 really is the quietest class, which is the only reason I call it Rest
+- the shuffled split really does beat the honest one
 
-`web/scripts/verify-decoder.mts` additionally replays the entire demo session through
-the shipped TypeScript and ONNX decoders and fails the build if either drifts from the
-Python pipeline. At last run: LDA 96.11% against Python's 96.09%, CNN 92.34%.
+`web/scripts/verify-decoder.mts` replays the whole demo session through the decoder that
+ships to the browser and fails the build if it drifts from the Python version. Last run:
+96.11% against Python's 96.09% for the linear model, and 92.34% for the neural network.
 
-## Honest limitations
+## What I do not know
 
-- **Eight subjects.** Every confidence interval here is wide. One- and two-point
-  differences are unresolved.
-- **The sampling rate is inferred** at 1 kHz from the power spectrum; the dataset
-  shipped no metadata. Every millisecond figure scales with `src/config.py:FS`. No
-  accuracy result depends on it.
-- **The gestures have no names.** Classes are described by their measured activation
-  signatures rather than given invented names. See `data/PROVENANCE.md`.
-- **One session per person.** Electrodes were never removed and reapplied, so nothing
-  here measures the across-session drift that breaks real devices.
-- **Provenance unresolved.** The source publication was not available and searching
-  did not identify it, so electrode placement is unknown.
+- **Eight people is not many.** Every uncertainty range here is wide because of it. If
+  two numbers are within a point or two, treat them as tied.
+- **I had to work out the sampling rate.** The files did not say. About 1000 samples a
+  second, estimated from the frequency content. If that is wrong, every millisecond
+  number scales by the same factor. No accuracy score depends on it.
+- **The gestures have no names.** Five unlabelled recordings per person, with nothing
+  saying what they were doing. I describe each one by which muscles fired instead of
+  making up names.
+- **One sitting per person.** The sensors were never peeled off and stuck back on, which
+  is one of the main things that breaks real devices. Nothing here measures that.
+- **I do not know where the data came from.** No paper came with it and searching did not
+  turn one up, so I do not know where on the arm the sensors were placed. Everything I
+  know and everything I had to guess is written down in `data/PROVENANCE.md`. If you
+  recognise this dataset, please open an issue.
+
+## Licence
+
+Code under MIT. Writing and figures under CC BY 4.0. The recordings in `data/` are not
+mine to license and I make no claim over them. See `LICENSE`.
+
+Not medical advice. Do not use any of this to make decisions about a prosthetic or any
+other device someone depends on.
