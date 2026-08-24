@@ -23,6 +23,8 @@ export default function Latency() {
 
   const best = latency.knees.td_lda_znorm;
   const row = sweep[Math.min(pick, sweep.length - 1)];
+  // quote compute at the knee, not at whichever window happens to be first
+  const kneeRow = sweep.find((r) => r.window_ms === best.knee_window_ms) ?? sweep[0];
 
   const xOf = (r: (typeof sweep)[number], m: string) =>
     xAxis === "window"
@@ -58,8 +60,8 @@ export default function Latency() {
               sub={`Shortest window within 1 pp of peak (${pct(best.peak_accuracy)})`} tone="accent" />
         <Stat value={pct(sweep[0].models.td_lda_znorm.accuracy)} label={`At ${sweep[0].window_ms} ms`}
               sub="Even a single blink of muscle carries signal" />
-        <Stat value={`${sweep[0].timing.td_features_ms.toFixed(2)} ms`} label="Compute per decode"
-              sub="Feature extraction + linear model, one core" />
+        <Stat value={`${kneeRow.timing.td_features_ms.toFixed(2)} ms`} label="Compute per decode"
+              sub={`Features + linear model at ${best.knee_window_ms} ms, one core`} />
       </div>
 
       <Card className="mt-6">
