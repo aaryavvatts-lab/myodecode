@@ -140,7 +140,7 @@ console.log(`  per-window compute ${(cnnElapsed / cnnRuns).toFixed(2)} ms`);
 console.log(`  linear model is    ${((steady - cnnAcc) * 100).toFixed(2)} pp ahead`);
 
 if (cnnAcc < 0.85) {
-  console.error(`\n  FAIL: CNN accuracy ${(cnnAcc * 100).toFixed(1)}% is implausibly low — check the gain path.`);
+  console.error(`\n  FAIL: CNN accuracy ${(cnnAcc * 100).toFixed(1)}% is implausibly low. Check the gain path.`);
   process.exit(1);
 }
 console.log(`\n  OK: both decoders verified.`);
