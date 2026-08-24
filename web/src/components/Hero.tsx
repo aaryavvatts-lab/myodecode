@@ -54,20 +54,26 @@ function Scope() {
       }
       if (!reduce) { t += 1.6; id = requestAnimationFrame(draw); }
     };
-    id = requestAnimationFrame(draw);
+    // Paint one frame straight away. requestAnimationFrame does not fire while the
+    // tab is in the background, so scheduling the first frame through it would leave
+    // the canvas blank. This also gives reduce-motion users a still waveform.
+    draw();
     return () => cancelAnimationFrame(id);
   }, [mode, inView]);
   return <div ref={wrap} className="h-full w-full"><canvas ref={cv} className="block h-full w-full" aria-hidden /></div>;
 }
 
 export default function Hero() {
+  const mode = useTheme();
   const leaky = leakage.ladder.find((e) => e.scheme === "random_within" && e.model === "td_lda")!;
   const honest = leakage.ladder.find((e) => e.scheme === "loso" && e.model === "td_lda")!;
   const knee = latency.knees.td_lda_znorm;
 
   return (
     <header className="relative overflow-hidden">
-      <div className="pointer-events-none absolute inset-0 opacity-[0.22]" style={{ maskImage: "linear-gradient(to bottom, black 10%, transparent 55%)", WebkitMaskImage: "linear-gradient(to bottom, black 10%, transparent 55%)" }}>
+      {/* The light palette sits closer to a white page, so it needs more weight. */}
+      <div className="pointer-events-none absolute inset-0"
+           style={{ opacity: mode === "dark" ? 0.3 : 0.55, maskImage: "linear-gradient(to bottom, black 10%, transparent 55%)", WebkitMaskImage: "linear-gradient(to bottom, black 10%, transparent 55%)" }}>
         <Scope />
       </div>
       <div className="relative mx-auto max-w-5xl px-5 pb-16 pt-20 sm:pb-24 sm:pt-28">

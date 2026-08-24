@@ -273,7 +273,7 @@ export default function LiveDecoder() {
       g.strokeRect(wx + 0.5, 0.5, ww, h - 1);
       if (playing) id = requestAnimationFrame(draw);
     };
-    id = requestAnimationFrame(draw);
+    draw();
     return () => cancelAnimationFrame(id);
   }, [meta, mode, scopeInView, playing]);
 
