@@ -97,10 +97,16 @@ export default function SignalExplorer() {
         <div className="mb-5 flex flex-wrap gap-2">
           {[0, 1, 2, 3, 4].map((c) => (
             <button key={c} onClick={() => setCls(c)}
-              className="focusable rounded-lg border px-3 py-1.5 text-[13px] font-medium transition-colors"
+              aria-pressed={cls === c}
+              className="focusable flex items-center gap-2 rounded-lg border px-3 py-1.5 text-[13px] font-medium transition-colors"
               style={cls === c
-                ? { background: gcol[c], color: "#fff", borderColor: gcol[c] }
+                ? { background: "var(--surface-0)", color: "var(--text-primary)",
+                    borderColor: gcol[c], boxShadow: `inset 0 0 0 1px ${gcol[c]}` }
                 : { color: "var(--text-secondary)" }}>
+              {/* A dot rather than a filled button: white on the lighter gesture
+                  colours does not clear 4.5:1, and the palette is not mine to re-step. */}
+              <span className="inline-block h-2.5 w-2.5 shrink-0 rounded-full"
+                    style={{ background: cls === c ? gcol[c] : "var(--border-strong)" }} aria-hidden />
               {sig?.class_labels[String(c)] ?? `Class ${c}`}
             </button>
           ))}
@@ -125,7 +131,10 @@ export default function SignalExplorer() {
           <div className="space-y-1">
             {[0, 1, 2, 3].map((ch) => (
               <div key={ch} className="grid grid-cols-[3.4rem_1fr] items-center gap-2">
-                <span className="font-[family-name:var(--font-mono)] text-[11px]" style={{ color: ccol[ch] }}>
+                <span className="flex items-center gap-1.5 font-[family-name:var(--font-mono)] text-[11px]"
+                      style={{ color: "var(--text-secondary)" }}>
+                  <span className="inline-block h-2 w-2 shrink-0 rounded-[2px]"
+                        style={{ background: ccol[ch] }} aria-hidden />
                   ch {ch + 1}
                 </span>
                 <Trace

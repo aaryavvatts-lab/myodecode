@@ -178,7 +178,8 @@ function Heatmap() {
 
   return (
     <div className="scroll-x">
-      <div className="min-w-[560px]">
+      <div className="min-w-[560px]" role="img"
+           aria-label="Grid of accuracy by how much signal is used and how many sensors are on. The same numbers are in the data table below.">
         <div className="grid gap-[2px]" style={{ gridTemplateColumns: `2.6rem repeat(${windows.length}, minmax(0,1fr))` }}>
           <div />
           {windows.map((w) => (

@@ -306,7 +306,7 @@ export default function LiveDecoder() {
             onClick={() => setPlaying((p) => !p)}
             disabled={!model || !meta}
             className="focusable rounded-lg px-4 py-2 text-[13px] font-medium disabled:opacity-40"
-            style={{ background: "var(--accent)", color: "#fff" }}>
+            style={{ background: "var(--accent)", color: "var(--on-accent)" }}>
             {playing ? "Pause" : model ? "Start decoding" : "Loading…"}
           </button>
           <button onClick={() => { setPlaying(false); reset(); }}
@@ -316,7 +316,7 @@ export default function LiveDecoder() {
             {[0.5, 1, 2, 4].map((s) => (
               <button key={s} onClick={() => setSpeed(s)}
                 className="focusable rounded-md border px-2 py-1 font-[family-name:var(--font-mono)] text-[11px]"
-                style={speed === s ? { background: "var(--accent)", color: "#fff", borderColor: "var(--accent)" } : {}}>
+                style={speed === s ? { background: "var(--accent)", color: "var(--on-accent)", borderColor: "var(--accent)" } : {}}>
                 {s}×
               </button>
             ))}

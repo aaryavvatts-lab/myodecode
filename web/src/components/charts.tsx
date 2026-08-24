@@ -51,7 +51,7 @@ export function Axes({
 
 /** Multi-series line chart with a shared crosshair tooltip. */
 export function LineChart({
-  series, height = 320, xLabel, yLabel, yDomain, xTicks, fmtX, fmtY, fmtTipX, fmtTipY, logScale, annotations,
+  series, height = 320, xLabel, yLabel, yDomain, xTicks, fmtX, fmtY, fmtTipX, fmtTipY, logScale, annotations, description,
 }: {
   series: { name: string; color: string; points: Pt[]; dashed?: boolean }[];
   height?: number; xLabel: string; yLabel: string;
@@ -60,6 +60,8 @@ export function LineChart({
   fmtTipX?: (v: number) => string; fmtTipY?: (v: number) => string;
   logScale?: boolean;
   annotations?: { x: number; label: string }[];
+  /** Read out to screen readers in place of the drawing. */
+  description?: string;
 }) {
   const [ref, w] = useElementWidth<HTMLDivElement>();
   const [hover, setHover] = useState<number | null>(null);
@@ -89,6 +91,12 @@ export function LineChart({
   return (
     <div ref={ref} className="relative w-full">
       <svg width="100%" height={h} viewBox={`0 0 ${Math.max(w, 200)} ${h}`} role="img"
+           aria-label={
+             description ??
+             `Line chart of ${yLabel} against ${xLabel}, with ${series.length} ` +
+             `series: ${series.map((x) => x.name).join(", ")}. The same numbers are ` +
+             `in the data table below the chart.`
+           }
            onMouseMove={(e) => {
              const r = (e.currentTarget as SVGSVGElement).getBoundingClientRect();
              setHover(idxOf(((e.clientX - r.left) / r.width) * Math.max(w, 200)));

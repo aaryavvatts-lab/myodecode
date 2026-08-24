@@ -77,7 +77,7 @@ export function Notice() {
             setShow(false);
           }}
           className="focusable shrink-0 self-start rounded-lg px-4 py-1.5 text-[13px] font-medium sm:self-auto"
-          style={{ background: "var(--accent)", color: "#fff" }}>
+          style={{ background: "var(--accent)", color: "var(--on-accent)" }}>
           Got it
         </button>
       </div>

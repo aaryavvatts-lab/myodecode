@@ -53,7 +53,8 @@ export default function Confusion() {
             what the gesture really was. Each column is what the decoder guessed.
           </p>
           <div className="scroll-x">
-            <div className="inline-block min-w-[360px]">
+            <div className="inline-block min-w-[360px]" role="img"
+                 aria-label="Confusion matrix. Rows are the true gesture, columns are what the decoder guessed. The same numbers are in the data table below.">
               <div className="grid gap-[2px]" style={{ gridTemplateColumns: "5.6rem repeat(5, 3.4rem)" }}>
                 <div />
                 {LABELS.map((n, j) => (

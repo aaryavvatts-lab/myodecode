@@ -49,7 +49,8 @@ export default function Accessibility() {
         <li>Sections are marked up as sections with real headings rather than styled text.</li>
         <li>Toggle buttons report whether they are pressed.</li>
         <li>Charts drawn as images carry a text description, and the underlying numbers are in the data tables.</li>
-        <li>Text resizes normally to 200 percent without content being cut off.</li>
+        <li>Browser zoom to 200 percent works without content being cut off or overlapping. Note that sizes are set in pixels, so changing only the browser font size will not scale the page. Zoom will.</li>
+        <li>Every chart drawn as a picture carries a description saying what it shows and pointing at the data table below it.</li>
       </UL>
 
       <H2>Small screens</H2>
@@ -95,7 +96,8 @@ export default function Accessibility() {
 
       <H2>How it was checked</H2>
       <UL>
-        <li>A colour contrast and colour blindness script, run over the palette as a set.</li>
+        <li>A colour blindness check run over the gesture palette as a set, testing every pair under the three common types.</li>
+        <li>A script that walks every piece of text on the live page, works out its real contrast against whatever is actually behind it, and flags anything under the threshold. Both colour schemes currently come back with zero failures. Three colours were changed because of it, including the link blue and the grey used for small print.</li>
         <li>Keyboard only navigation through every page.</li>
         <li>Browser zoom to 200 percent and a 320 pixel wide viewport.</li>
         <li>Light mode, dark mode, and the system default.</li>
