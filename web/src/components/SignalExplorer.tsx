@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { CHANNEL_COLORS, GESTURE_COLORS } from "@/lib/palette";
+import { CHANNEL_COLORS, GESTURE_COLORS, GESTURE_NAMES } from "@/lib/palette";
 import { Card, Inferred, Section, Toggle, useElementWidth, useTheme } from "./ui";
 
 interface Signals {
@@ -107,7 +107,7 @@ export default function SignalExplorer() {
                   colours does not clear 4.5:1, and the palette is not mine to re-step. */}
               <span className="inline-block h-2.5 w-2.5 shrink-0 rounded-full"
                     style={{ background: cls === c ? gcol[c] : "var(--border-strong)" }} aria-hidden />
-              {sig?.class_labels[String(c)] ?? `Class ${c}`}
+              {sig?.class_labels[String(c)] ?? GESTURE_NAMES[c]}
             </button>
           ))}
         </div>
@@ -115,7 +115,7 @@ export default function SignalExplorer() {
         {sigInfo && (
           <p className="mb-5 text-[13px]" style={{ color: "var(--text-secondary)" }}>
             <span className="font-medium" style={{ color: "var(--text-primary)" }}>
-              {sig?.class_labels[String(cls)]}
+              {sig?.class_labels[String(cls)] ?? GESTURE_NAMES[cls]}
             </span>{" "}
 . {sigInfo.note}. Overall muscle activity is{" "}
             <span className="tnum font-[family-name:var(--font-mono)]">{sigInfo.total.toFixed(2)}×</span>{" "}

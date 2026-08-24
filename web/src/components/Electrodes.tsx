@@ -5,7 +5,7 @@ import channels from "@/results/channels.json";
 import tradeoff from "@/results/tradeoff.json";
 import { CHANNEL_COLORS, onColor, sequentialColor } from "@/lib/palette";
 import { Card, Section, Stat, TableView, useTheme } from "./ui";
-import { pct } from "@/lib/format";
+import { listJoin, pct, plural } from "@/lib/format";
 
 const ALL = [1, 2, 3, 4];
 
@@ -42,7 +42,7 @@ export default function Electrodes() {
     >
       <div className="grid gap-3 sm:grid-cols-3">
         <Stat value={pct(full.models.td_lda_znorm.accuracy)} label="All four sensors" sub="The best you can do here" />
-        <Stat value={pct(bestPair.accuracy)} label={`Best two, sensors ${bestPair.channels.join(" and ")}`}
+        <Stat value={pct(bestPair.accuracy)} label={`Best two, sensors ${listJoin(bestPair.channels)}`}
               sub={`Half the hardware for ${((full.models.td_lda_znorm.accuracy - bestPair.accuracy) * 100).toFixed(1)} points less accuracy`} tone="accent" />
         <Stat value={pct(singles[0].models.td_lda_znorm.accuracy)} label={`Best single, sensor ${singles[0].channels[0]}`}
               sub="One sensor, still telling five gestures apart" />
@@ -76,8 +76,8 @@ export default function Electrodes() {
           <div className="text-[14px]" style={{ color: "var(--text-secondary)" }}>
             {on.length === 0
               ? "Turn at least one sensor on."
-              : <>using {on.length} sensor{on.length > 1 ? "s" : ""} ({on.map((c) => `#${c}`).join(", ")}),
-                 tested on a person the model has never seen</>}
+              : <>using {plural(on.length, "sensor")} ({listJoin(on)}), tested on a person
+                 the model has never seen</>}
           </div>
         </div>
         {current && on.length > 0 && on.length < 4 && (
@@ -96,13 +96,13 @@ export default function Electrodes() {
               const f = frontier[String(n)];
               return (
                 <div key={n} className="grid grid-cols-[5.4rem_1fr_4.2rem_3.4rem] items-center gap-2">
-                  <span className="text-[13px]">{n} sensor{n > 1 ? "s" : ""}</span>
+                  <span className="text-[13px]">{plural(n, "sensor")}</span>
                   <div className="h-6 rounded-[4px]" style={{ background: "var(--surface-2)" }}>
                     <div className="h-full rounded-[4px]"
                          style={{ width: `${f.accuracy * 100}%`, background: sequentialColor(0.3 + n * 0.17) }} />
                   </div>
                   <span className="font-[family-name:var(--font-mono)] text-[11px]"
-                        style={{ color: "var(--text-muted)" }}>ch {f.channels.join("+")}</span>
+                        style={{ color: "var(--text-muted)" }}>{listJoin(f.channels)}</span>
                   <span className="tnum text-right font-[family-name:var(--font-mono)] text-[13px]">
                     {pct(f.accuracy)}
                   </span>
@@ -123,7 +123,7 @@ export default function Electrodes() {
           <div className="space-y-2.5">
             {singles.map((s) => (
               <div key={s.channels[0]} className="grid grid-cols-[5.4rem_1fr_3.4rem] items-center gap-2">
-                <span className="text-[13px]">Channel {s.channels[0]}</span>
+                <span className="text-[13px]">Sensor {s.channels[0]}</span>
                 <div className="h-6 rounded-[4px]" style={{ background: "var(--surface-2)" }}>
                   <div className="h-full rounded-[4px]"
                        style={{ width: `${s.models.td_lda_znorm.accuracy * 100}%`, background: ccol[s.channels[0] - 1] }} />
@@ -156,8 +156,8 @@ export default function Electrodes() {
                 <span className="font-medium">To hit {pct(Number(t), 0)}</span>
                 {v ? (
                   <ul className="mt-1 space-y-0.5" style={{ color: "var(--text-secondary)" }}>
-                    <li>Fewest sensors: {v.fewest_electrodes.n_channels} (numbers {v.fewest_electrodes.channels.join(" and ")}), using {v.fewest_electrodes.window_ms} ms</li>
-                    <li>Fastest: {v.lowest_latency.window_ms} ms, needing {v.lowest_latency.n_channels} sensor{v.lowest_latency.n_channels > 1 ? "s" : ""} (numbers {v.lowest_latency.channels.join(" and ")})</li>
+                    <li>Fewest sensors: {plural(v.fewest_electrodes.n_channels, "sensor")} ({listJoin(v.fewest_electrodes.channels)}), using {v.fewest_electrodes.window_ms} ms</li>
+                    <li>Fastest: {v.lowest_latency.window_ms} ms, needing {plural(v.lowest_latency.n_channels, "sensor")} ({listJoin(v.lowest_latency.channels)})</li>
                   </ul>
                 ) : <p className="mt-1" style={{ color: "var(--text-muted)" }}>Not reachable with this data.</p>}
               </div>
@@ -227,7 +227,7 @@ function Heatmap() {
       </div>
       <TableView
         headers={["Signal used (ms)", "Sensors", "Which ones", "Accuracy on a new person"]}
-        rows={cells.map((c) => [c.window_ms, c.n_channels, c.channels.join(", "), pct(c.accuracy, 2)])}
+        rows={cells.map((c) => [c.window_ms, c.n_channels, listJoin(c.channels), pct(c.accuracy, 2)])}
       />
     </div>
   );
