@@ -3,6 +3,7 @@
 import { useSearchParams } from "next/navigation";
 import { Suspense } from "react";
 import Calibration from "@/components/Calibration";
+import Confusion from "@/components/Confusion";
 import Electrodes from "@/components/Electrodes";
 import Latency from "@/components/Latency";
 import LatentSpace from "@/components/LatentSpace";
@@ -14,7 +15,7 @@ import SignalExplorer from "@/components/SignalExplorer";
 
 const MAP: Record<string, React.ComponentType> = {
   leakage: Leakage, data: SignalExplorer, primer: Primer, latency: Latency,
-  electrodes: Electrodes, calibration: Calibration, latent: LatentSpace,
+  electrodes: Electrodes, calibration: Calibration, confusion: Confusion, latent: LatentSpace,
   live: LiveDecoder, methods: Methods,
 };
 

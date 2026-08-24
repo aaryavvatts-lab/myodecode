@@ -51,6 +51,13 @@ against their own *unlabelled* signal — free, instant, no cooperation — is w
 **+2.0 pp**. Twelve seconds of *labelled* calibration on top of that is worth a
 further **+0.2 pp**, well inside the confidence interval.
 
+**Where are the errors?** Not spread out — **82.8%** of every mistake is one pair of
+gestures being swapped for each other, and that pair is also the closest pair of class
+centroids in the decoder's own feature space. Rest is never confused with anything
+(100% recall): near-silence on four channels is not something an active gesture can
+imitate. For a product this reframes the result — five gestures at 95.4% is really four
+gestures at near-ceiling plus one ambiguous pair.
+
 **Does it survive streaming?** A synthesised session where the held-out wearer cycles
 gestures every two seconds, decoded causally. Online running normalisation costs only
 0.5 pp against the offline statistics the headline number quietly assumes. The real
@@ -84,6 +91,7 @@ uv pip install --python .venv/bin/python -r requirements.txt
 .venv/bin/python run_all.py            # ~2-3 h; --fast skips the CNN sweeps
 .venv/bin/python sync_web.py && .venv/bin/python -m src.export
 .venv/bin/python -m src.figures
+cd web && npm install && npm run verify   # checks the browser decoder against Python
 ```
 
 Seeds are fixed throughout. The web app refuses to build if any results file is still
@@ -100,6 +108,10 @@ quietly rot:
 - no window spans two recordings, and windows match the source signal sample-for-sample
 - class 0 really is the quietest class, which is the entire basis for calling it Rest
 - **the leaky split beats the honest split** — the thesis, as an assertion
+
+`web/scripts/verify-decoder.mts` additionally replays the entire demo session through
+the shipped TypeScript and ONNX decoders and fails the build if either drifts from the
+Python pipeline. At last run: LDA 96.11% against Python's 96.09%, CNN 92.34%.
 
 ## Honest limitations
 

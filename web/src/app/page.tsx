@@ -1,4 +1,5 @@
 import Calibration from "@/components/Calibration";
+import Confusion from "@/components/Confusion";
 import Electrodes from "@/components/Electrodes";
 import Hero from "@/components/Hero";
 import Latency from "@/components/Latency";
@@ -19,6 +20,7 @@ export default function Home() {
       <Latency />
       <Electrodes />
       <Calibration />
+      <Confusion />
       <LatentSpace />
       <LiveDecoder />
       <Methods />
