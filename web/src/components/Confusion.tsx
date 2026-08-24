@@ -81,8 +81,8 @@ export default function Confusion() {
                               // largest error, so a 0.9% cell cannot look like a 14% one.
                               background: v < 0.002
                                 ? "var(--surface-2)"
-                                : sequentialColor(diag ? 0.45 + v * 0.55 : Math.min(1, v / maxOff)),
-                              color: (diag && v > 0.3) || (!diag && v / maxOff > 0.55)
+                                : sequentialColor(diag ? 0.45 + v * 0.55 : 0.8 * Math.min(1, v / maxOff)),
+                              color: (diag && v > 0.3) || (!diag && v / maxOff > 0.7)
                                 ? "#fff" : "var(--text-muted)",
                               outline: hover === key ? "2px solid var(--text-primary)" : undefined,
                               outlineOffset: 1,

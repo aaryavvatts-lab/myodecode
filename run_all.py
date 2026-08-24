@@ -10,8 +10,8 @@ import time
 
 sys.path.insert(0, ".")
 
-from src.experiments import (calibration, channels, latency, latent, leakage,  # noqa: E402
-                             realtime, tradeoff)
+from src.experiments import (calibration, channels, confusion, latency, latent,  # noqa: E402
+                             leakage, realtime, tradeoff)
 
 STAGES = {
     "leakage": lambda fast: leakage.main(cnn=True, permutations=20 if fast else 200),
@@ -19,6 +19,7 @@ STAGES = {
     "channels": lambda fast: channels.main(cnn=not fast, cnn_epochs=40),
     "tradeoff": lambda fast: tradeoff.main(),
     "calibration": lambda fast: calibration.main(),
+    "confusion": lambda fast: confusion.main(),
     "latent": lambda fast: latent.main(cnn_epochs=20 if fast else 40),
     "realtime": lambda fast: realtime.main(),
 }

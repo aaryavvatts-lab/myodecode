@@ -236,9 +236,45 @@ def fig_latent():
     save(fig, "07_latent_space")
 
 
+def fig_confusion():
+    d = load("confusion")
+    M = np.array(d["row_normalised"])
+    labels = [v.replace("Gesture ", "G") for v in d["class_labels"].values()]
+
+    fig, ax = plt.subplots(figsize=(5.2, 4.4))
+    off = M.copy()
+    np.fill_diagonal(off, 0)
+    # One ramp for the off-diagonal, scaled to the largest error, so a 0.9% cell
+    # cannot read as strongly as a 14% one.
+    # Cap the error ramp below the diagonal's range so a mistake can never read as
+    # darker than a correct classification.
+    disp = np.where(np.eye(len(M), dtype=bool), 0.45 + M * 0.55, 0.80 * off / off.max())
+    ax.imshow(disp, cmap="Blues", vmin=0, vmax=1)
+    for i in range(len(M)):
+        for j in range(len(M)):
+            v = M[i, j]
+            if v < 0.002:
+                txt = "·"
+            else:
+                txt = f"{v * 100:.0f}" if v >= 0.1 else f"{v * 100:.1f}"
+            ax.text(j, i, txt, ha="center", va="center", fontsize=9,
+                    color="white" if disp[i, j] > 0.55 else INK)
+    ax.set_xticks(range(len(M)), labels)
+    ax.set_yticks(range(len(M)), labels)
+    ax.set_xlabel("predicted")
+    ax.set_ylabel("true")
+    ax.grid(False)
+    w = d["most_confused"]
+    ax.set_title(f"{d['share_of_errors_in_worst_pair']:.0%} of all errors are "
+                 f"{w['a_label']} vs {w['b_label']}", loc="left", fontweight="bold",
+                 fontsize=10)
+    save(fig, "08_confusion")
+
+
 FIGURES = {"leakage": fig_leakage, "latency": fig_latency, "channels": fig_channels,
            "tradeoff": fig_tradeoff, "calibration": fig_calibration,
-           "realtime": fig_realtime, "latent": fig_latent}
+           "realtime": fig_realtime, "latent": fig_latent,
+           "confusion": fig_confusion}
 
 
 def main():
