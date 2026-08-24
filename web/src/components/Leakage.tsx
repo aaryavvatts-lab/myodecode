@@ -3,6 +3,7 @@
 import { useState } from "react";
 import leakage from "@/results/leakage.json";
 import { BarRow } from "./charts";
+import SplitViewer from "./SplitViewer";
 import { Card, Inferred, Section, Stat, TableView } from "./ui";
 import { pct, pp } from "@/lib/format";
 
@@ -67,7 +68,17 @@ export default function Leakage() {
       </div>
 
       <Card className="mt-6">
-        <h3 className="mb-1 text-[14px] font-medium">Same model, four ways of splitting the data</h3>
+        <h3 className="mb-1 text-[14px] font-medium">See what each split actually does</h3>
+        <p className="mb-5 text-[13px]" style={{ color: "var(--text-secondary)" }}>
+          Each row is one person&apos;s recording, cut into windows left to right. Blue
+          windows go into training, orange ones are held back for the test. Switch
+          between the four options and watch where the orange lands.
+        </p>
+        <SplitViewer />
+      </Card>
+
+      <Card className="mt-4">
+        <h3 className="mb-1 text-[14px] font-medium">What that does to the score</h3>
         <p className="mb-4 text-[13px]" style={{ color: "var(--text-secondary)" }}>
           The model is the same every time. Five simple measurements per sensor, fed into
           a linear classifier.
