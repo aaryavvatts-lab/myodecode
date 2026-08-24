@@ -1,0 +1,14 @@
+.venv/
+__pycache__/
+*.pyc
+.cache/
+.pytest_cache/
+logs_*.txt
+run_sweeps.py
+.DS_Store
+
+web/node_modules/
+web/.next/
+web/out/
+web/.vercel/
+web/next-env.d.ts

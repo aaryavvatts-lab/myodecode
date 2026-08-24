@@ -1,0 +1,9 @@
+data/
+src/
+tests/
+results/
+figures/
+.venv/
+.cache/
+*.py
+requirements.txt

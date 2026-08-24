@@ -1,0 +1,21 @@
+{
+  "kind": "cnn",
+  "window_samples": 250,
+  "fs": 1000,
+  "n_channels": 4,
+  "latent_dim": 64,
+  "held_out": 8,
+  "held_out_accuracy": 0.9685138539042821,
+  "subject_gain": {
+    "1": 0.03850292041897774,
+    "2": 0.03548204526305199,
+    "3": 0.046160273253917694,
+    "4": 0.038575224578380585,
+    "5": 0.033333614468574524,
+    "6": 0.036057863384485245,
+    "7": 0.040775399655103683,
+    "8": 0.04702893644571304
+  },
+  "onnx_bytes": 223009,
+  "note": "Input is a (1, 4, W) window divided by a scalar gain. Offline that gain is the subject's whole-recording RMS; the live demo estimates it causally with a running RMS."
+}
