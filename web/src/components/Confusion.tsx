@@ -45,14 +45,13 @@ export default function Confusion() {
               sub="And nearly everything it loses goes to one other gesture" />
       </div>
 
-      <div className="mt-6 grid gap-4 lg:grid-cols-[auto_1fr]">
-        <Card>
+      <Card className="mt-6">
           <h3 className="mb-1 text-[14px] font-medium">Confusion matrix</h3>
           <p className="mb-4 text-[13px]" style={{ color: "var(--text-secondary)" }}>
             Every person tested while held out of training, then added up. Each row is
             what the gesture really was. Each column is what the decoder guessed.
           </p>
-          <div className="scroll-x">
+          <div className="scroll-x flex justify-center">
             <div className="inline-block min-w-[360px]" role="img"
                  aria-label="Confusion matrix. Rows are the true gesture, columns are what the decoder guessed. The same numbers are in the data table below.">
               <div className="grid gap-[2px]" style={{ gridTemplateColumns: "5.6rem repeat(5, 3.4rem)" }}>
@@ -116,16 +115,16 @@ export default function Confusion() {
               n, ...raw[i].map(String), pct(confusion.per_class_recall[i], 1),
             ])}
           />
-        </Card>
+      </Card>
 
-        <div className="space-y-4">
+      <div className="mt-4 grid gap-4 lg:grid-cols-2 lg:items-start">
           <Card>
             <h3 className="mb-1 text-[14px] font-medium">One pair does most of the damage</h3>
             <p className="text-[13px] leading-relaxed" style={{ color: "var(--text-secondary)" }}>
               <strong style={{ color: "var(--text-primary)" }}>
                 {pct(confusion.share_of_errors_in_worst_pair, 0)}
               </strong>{" "}
-              of every mistake the decoder makes is {worst.a_label} and {worst.b_label}
+              of every mistake the decoder makes is {worst.a_label} and {worst.b_label}{" "}
               getting swapped. It does not even go both ways equally.{" "}
               {worst.b_label} gets read as {worst.a_label}{" "}
               <strong style={{ color: "var(--text-primary)" }}>
@@ -162,7 +161,6 @@ export default function Confusion() {
               a thing I noticed, not a thing I proved.
             </p>
           </Card>
-        </div>
       </div>
     </Section>
   );
