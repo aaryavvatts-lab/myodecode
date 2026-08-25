@@ -7,7 +7,18 @@ const inter = Inter({ subsets: ["latin"], variable: "--font-sans", display: "swa
 const mono = JetBrains_Mono({ subsets: ["latin"], variable: "--font-mono", display: "swap" });
 const serif = Newsreader({ subsets: ["latin"], variable: "--font-serif", display: "swap" });
 
+// Without this the link preview image resolves against localhost. Vercel sets the
+// production domain at build time; fall back to the per-deploy URL, then to local.
+const siteUrl =
+  process.env.NEXT_PUBLIC_SITE_URL ??
+  (process.env.VERCEL_PROJECT_PRODUCTION_URL
+    ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
+    : process.env.VERCEL_URL
+      ? `https://${process.env.VERCEL_URL}`
+      : "http://localhost:3000");
+
 export const metadata: Metadata = {
+  metadataBase: new URL(siteUrl),
   title: "MyoDecode: how fast can you read a hand?",
   description:
     "Decoding hand gestures from four channels of forearm EMG: how fast, how few electrodes, and how much reported accuracy is leakage.",

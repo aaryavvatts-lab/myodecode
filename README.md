@@ -46,10 +46,12 @@ which is exactly what guessing between five options should give (p = 0.005).
 
 **How fast can it decide?** Accuracy against how much signal it gets to see. I kept the
 step between windows fixed across the sweep, otherwise short windows train on far more
-data and the curve measures the wrong thing.
+data and the curve measures the wrong thing. It plateaus around 400 ms, but 100 ms
+already gets 93.7% and 50 ms gets 90.8%, so a fast decoder is not far off a slow one.
 
-**How few sensors do you need?** All fifteen combinations of the four sensors. Two
-sensors get about 92%. One sensor on its own gets about 81%, against 20% for guessing.
+**How few sensors do you need?** All fifteen combinations of the four sensors. The best
+two (sensors 1 and 3) get 91.7% against 95.4% for all four. The best single sensor gets
+80.6% on its own, against 20% for guessing.
 
 **Should users do a setup routine?** No. Rescaling each person's measurements against
 their own signal is free, needs no labels, and is worth 2.0 points. Twelve seconds of
@@ -61,6 +63,20 @@ gestures being swapped for each other, and that pair is also the closest pair in
 numbers the decoder looks at. Rest is never confused with anything at all. For anyone
 building something with this, that reframes it: five gestures at 95.4% is really four
 gestures that work almost perfectly plus one pair that does not.
+
+**What did the network actually learn?** This was the surprise. I measured how tidily
+each representation groups, and they came out opposite ways round. The twenty
+hand-computed numbers group by gesture (0.210) and slightly less than randomly by
+person (-0.015). The network's sixty-four learned numbers group weakly by gesture
+(0.021) and more strongly by person (0.051).
+
+Looking at the shape of it makes the reason obvious. The network's space is a scatter
+of 33 small islands, and **every single island contains exactly one person** (purity
+1.000). The hand-computed numbers form 4 big groups with person purity 0.141, which is
+chance for eight people (0.125). So the network did not build a space of gestures that
+happens to vary between people. It built a space of people, with the gestures tucked
+inside each one. It still classifies fine, because the linear layer on top can pull the
+gesture part out, but it explains why it never pulled ahead.
 
 **Does it hold up on a live stream?** I spliced a fake session where a held out person
 switches gesture every two seconds, then decoded it causally. Estimating the rescaling

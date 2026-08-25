@@ -88,7 +88,10 @@ def fig_latency():
         ax.plot(xs, ys, color=c, ls=ls, lw=2, marker="o", ms=4, label=label)
     knee = d["knees"]["td_lda_znorm"]["knee_window_ms"]
     ax.axvline(knee, color=MUTED, ls=":", lw=1)
-    ax.text(knee * 1.06, 0.79, f"knee\n{knee:.0f} ms", fontsize=8, color=MUTED)
+    # top of the axes, clear of the legend in the lower right
+    ax.annotate(f"knee, {knee:.0f} ms", xy=(knee, 1.0), xycoords=("data", "axes fraction"),
+                xytext=(-4, -12), textcoords="offset points", ha="right",
+                fontsize=8, color=MUTED)
     ax.set_xscale("log")
     ax.set_xticks([25, 50, 100, 200, 400, 1000], ["25", "50", "100", "200", "400", "1000"])
     ax.set_xlabel("Window length (ms, inferred from fs = 1 kHz)")
@@ -213,26 +216,38 @@ def fig_realtime():
 def fig_latent():
     d = load("latent")
     pts = d["points"]
-    fig, axes = plt.subplots(1, 2, figsize=(8.4, 3.9))
-    emb = np.array(pts["projections"]["cnn_latent"])
-    g = np.array(pts["gesture"]); s = np.array(pts["subject"])
-    for k in range(5):
-        m = g == k
-        axes[0].scatter(emb[m, 0], emb[m, 1], s=3, c=GESTURE[k], alpha=0.55, lw=0,
-                        label=["Rest", "Gesture 1", "Gesture 2", "Gesture 3", "Gesture 4"][k])
-    axes[0].legend(frameon=False, fontsize=7.5, markerscale=3, loc="best")
-    axes[0].set_title(f"Coloured by gesture  (silhouette {d['silhouette']['cnn_latent']['by_gesture']:+.3f})",
-                      loc="left", fontweight="bold", fontsize=9.5)
+    g = np.array(pts["gesture"])
+    subj = np.array(pts["subject"])
+    names = ["Rest", "Gesture 1", "Gesture 2", "Gesture 3", "Gesture 4"]
     greys = plt.cm.Greys(np.linspace(0.35, 0.95, 8))
-    for k in range(1, 9):
-        m = s == k
-        axes[1].scatter(emb[m, 0], emb[m, 1], s=3, color=greys[k - 1], alpha=0.55, lw=0)
-    axes[1].set_title(f"Coloured by subject  (silhouette {d['silhouette']['cnn_latent']['by_subject']:+.3f})",
-                      loc="left", fontweight="bold", fontsize=9.5)
-    for a in axes:
-        a.set_xticks([]); a.set_yticks([]); a.grid(False)
-    fig.suptitle("CNN latent space: organised by gesture, indifferent to the wearer",
-                 x=0.02, ha="left", fontweight="bold")
+
+    rows = [("td_features", "20 hand-computed numbers"),
+            ("cnn_latent", "64 numbers the network learned")]
+    fig, axes = plt.subplots(2, 2, figsize=(8.2, 8.0))
+
+    for r, (key, label) in enumerate(rows):
+        emb = np.array(pts["projections"][key])
+        sil = d["silhouette"][key]
+        for k in range(5):
+            m = g == k
+            axes[r, 0].scatter(emb[m, 0], emb[m, 1], s=3, c=GESTURE[k], alpha=0.55,
+                               lw=0, label=names[k] if r == 0 else None)
+        axes[r, 0].set_title(f"{label}\nby gesture, score {sil['by_gesture']:+.3f}",
+                             loc="left", fontweight="bold", fontsize=9.5)
+        for k in range(1, 9):
+            m = subj == k
+            axes[r, 1].scatter(emb[m, 0], emb[m, 1], s=3, color=greys[k - 1], alpha=0.55, lw=0)
+        axes[r, 1].set_title(f"same points\nby person, score {sil['by_subject']:+.3f}",
+                             loc="left", fontweight="bold", fontsize=9.5)
+
+    axes[0, 0].legend(frameon=False, fontsize=7.5, markerscale=3, loc="upper right")
+    for ax in axes.ravel():
+        ax.set_xticks([]); ax.set_yticks([]); ax.grid(False)
+
+    fig.suptitle("The hand-computed numbers sort by gesture.\n"
+                 "The network sorted more by who was wearing the sensors.",
+                 x=0.02, ha="left", fontweight="bold", fontsize=11)
+    fig.tight_layout(rect=[0, 0, 1, 0.93])
     save(fig, "07_latent_space")
 
 
@@ -244,8 +259,6 @@ def fig_confusion():
     fig, ax = plt.subplots(figsize=(5.2, 4.4))
     off = M.copy()
     np.fill_diagonal(off, 0)
-    # One ramp for the off-diagonal, scaled to the largest error, so a 0.9% cell
-    # cannot read as strongly as a 14% one.
     # Cap the error ramp below the diagonal's range so a mistake can never read as
     # darker than a correct classification.
     disp = np.where(np.eye(len(M), dtype=bool), 0.45 + M * 0.55, 0.80 * off / off.max())
@@ -254,7 +267,7 @@ def fig_confusion():
         for j in range(len(M)):
             v = M[i, j]
             if v < 0.002:
-                txt = "·"
+                txt = "."
             else:
                 txt = f"{v * 100:.0f}" if v >= 0.1 else f"{v * 100:.1f}"
             ax.text(j, i, txt, ha="center", va="center", fontsize=9,

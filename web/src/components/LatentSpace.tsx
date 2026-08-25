@@ -8,6 +8,10 @@ import { pct } from "@/lib/format";
 interface Latent {
   window_ms: number; loso_accuracy: number;
   silhouette: Record<"cnn_latent" | "td_features", { by_gesture: number; by_subject: number }>;
+  cluster_purity: Record<"cnn_latent" | "td_features", {
+    n_clusters: number; purity_by_gesture: number; purity_by_subject: number;
+    chance_purity_by_subject: number;
+  }>;
   points: {
     gesture: number[]; subject: number[];
     projections: Record<"cnn_latent" | "td_features", number[][]>;
@@ -44,14 +48,30 @@ function Scatter({ pts, colorBy, gesture, subject, mode }: {
   const sx = (v: number) => pad + ((v - x0) / (x1 - x0 || 1)) * (W - pad * 2);
   const sy = (v: number) => h - pad - ((v - y0) / (y1 - y0 || 1)) * (h - pad * 2);
 
-  // centroid labels give gesture identity a colour-independent anchor
+  // Centroid labels anchor gesture identity without relying on colour. When a
+  // representation is scattered rather than clustered, the centroids collapse toward
+  // the middle and the labels pile up, so drop any that would overlap. The legend
+  // still carries identity in that case.
   const centroids = useMemo(() => {
     if (colorBy !== "gesture") return [];
-    return [0, 1, 2, 3, 4].map((g) => {
-      const idx = gesture.map((v, i) => (v === g ? i : -1)).filter((i) => i >= 0);
+    const all = [0, 1, 2, 3, 4].map((g) => {
+      const idx: number[] = [];
+      gesture.forEach((v, i) => { if (v === g) idx.push(i); });
       if (!idx.length) return null;
-      return { g, x: idx.reduce((a, i) => a + pts[i][0], 0) / idx.length, y: idx.reduce((a, i) => a + pts[i][1], 0) / idx.length };
-    }).filter(Boolean) as { g: number; x: number; y: number }[];
+      const cx = idx.reduce((a, i) => a + pts[i][0], 0) / idx.length;
+      const cy = idx.reduce((a, i) => a + pts[i][1], 0) / idx.length;
+      // how tightly that gesture actually sits around its centre
+      const spread = Math.sqrt(idx.reduce((a, i) =>
+        a + (pts[i][0] - cx) ** 2 + (pts[i][1] - cy) ** 2, 0) / idx.length);
+      return { g, x: cx, y: cy, spread };
+    }).filter(Boolean) as { g: number; x: number; y: number; spread: number }[];
+
+    const kept: typeof all = [];
+    for (const c of all.sort((a, b) => a.spread - b.spread)) {
+      const clash = kept.some((k) => Math.hypot(k.x - c.x, k.y - c.y) < 0.55);
+      if (!clash) kept.push(c);
+    }
+    return kept;
   }, [pts, gesture, colorBy]);
 
   return (
@@ -92,6 +112,7 @@ export default function LatentSpace() {
   useEffect(() => { fetch("/data/latent.json").then((r) => r.json()).then(setD).catch(() => {}); }, []);
 
   const sil = d?.silhouette[space];
+  const pur = d?.cluster_purity[space];
 
   return (
     <Section
@@ -102,9 +123,9 @@ export default function LatentSpace() {
         <>
           If a decoder is going to work on a stranger, what it stores internally should be
           sorted by what the hand is doing, not by whose arm it is on. Below is the same
-          picture coloured two ways. There is also a score for it. High when coloured by
-          gesture is good. High when coloured by person means the model is spending its
-          effort memorising individual people.
+          data coloured two ways, with a score for how tidily it groups. High by gesture is
+          good. High by person means the model is spending its effort remembering
+          individual people instead. The two approaches come out very differently here.
         </>
       }
     >
@@ -115,8 +136,11 @@ export default function LatentSpace() {
           <div className="grid gap-3 sm:grid-cols-3">
             <Stat value={sil!.by_gesture.toFixed(3)} label="Grouped by gesture" sub="Higher is better" tone="accent" />
             <Stat value={sil!.by_subject.toFixed(3)} label="Grouped by person" sub="Lower is better" />
-            <Stat value={(sil!.by_gesture - sil!.by_subject).toFixed(3)} label="Gap between them"
-                  sub="How much more it cares about the gesture than the person" />
+            <Stat value={(sil!.by_gesture - sil!.by_subject).toFixed(3)} label="Gesture minus person"
+                  sub={sil!.by_gesture > sil!.by_subject
+                    ? "Positive, so it cares more about the gesture. Good."
+                    : "Negative, so it groups more by person than by gesture."}
+                  tone={sil!.by_gesture > sil!.by_subject ? "accent" : "warn"} />
           </div>
 
           <Card className="mt-6">
@@ -159,12 +183,81 @@ export default function LatentSpace() {
           </Card>
 
           <Card className="mt-4">
+            <h3 className="mb-1 text-[14px] font-medium">This one surprised me</h3>
             <p className="text-[13px] leading-relaxed" style={{ color: "var(--text-secondary)" }}>
-              Both versions sort gestures much more strongly than they sort people, which
-              is why the scores hold up on someone new at all. Worth noticing that the
-              twenty numbers I calculated by hand do about as well as the sixty-four the
-              network learned. The network is not finding anything the simple measurements
-              missed.
+              The twenty numbers I work out by hand group strongly by gesture
+              ({d.silhouette.td_features.by_gesture.toFixed(3)}) and slightly less than
+              randomly by person ({d.silhouette.td_features.by_subject.toFixed(3)}). That
+              is exactly what you want. Whatever they are measuring is about the hand, and
+              they are close to blind to whose arm it is.
+            </p>
+            <p className="mt-3 text-[13px] leading-relaxed" style={{ color: "var(--text-secondary)" }}>
+              The neural network does the opposite. Its sixty-four numbers group only
+              weakly by gesture ({d.silhouette.cnn_latent.by_gesture.toFixed(3)}) and more
+              strongly by person ({d.silhouette.cnn_latent.by_subject.toFixed(3)}). Given
+              free rein to learn any representation it liked, a good chunk of what it
+              chose to encode was who was wearing the sensors. Nobody asked it to do that,
+              and it is of no use for reading gestures off a stranger.
+            </p>
+            <p className="mt-3 text-[13px] leading-relaxed" style={{ color: "var(--text-secondary)" }}>
+              It still classifies well, because the linear layer on top can pull out the
+              gesture part and ignore the rest. But it explains why it never pulled ahead.
+              It spent capacity on something that does not help. Both numbers are small in
+              absolute terms, which is normal when you measure grouping in this many
+              dimensions. What matters is which way round they sit.
+            </p>
+          </Card>
+
+          <Card className="mt-4">
+            <h3 className="mb-1 text-[14px] font-medium">Look at the shape of it</h3>
+            <p className="text-[13px] leading-relaxed" style={{ color: "var(--text-secondary)" }}>
+              Switch the view above to what the network stores and you get a scatter of
+              small islands instead of a few big groups. I counted them. There are{" "}
+              <strong style={{ color: "var(--text-primary)" }}>
+                {d.cluster_purity.cnn_latent.n_clusters}
+              </strong>
+              , against eight people doing five gestures, which is forty combinations. Then
+              I checked what each island is made of.
+            </p>
+            <div className="mt-4 grid gap-3 sm:grid-cols-2">
+              {(["td_features", "cnn_latent"] as const).map((k) => {
+                const c = d.cluster_purity[k];
+                const label = k === "cnn_latent" ? "What the network stores" : "The 20 hand-computed numbers";
+                return (
+                  <div key={k} className="rounded-lg border p-3" style={{ background: "var(--surface-2)" }}>
+                    <div className="text-[12px] font-medium">{label}</div>
+                    <dl className="mt-2 space-y-1 text-[12px]">
+                      <div className="flex justify-between">
+                        <dt style={{ color: "var(--text-muted)" }}>Islands</dt>
+                        <dd className="tnum font-[family-name:var(--font-mono)]">{c.n_clusters}</dd>
+                      </div>
+                      <div className="flex justify-between">
+                        <dt style={{ color: "var(--text-muted)" }}>Same gesture</dt>
+                        <dd className="tnum font-[family-name:var(--font-mono)]">{pct(c.purity_by_gesture, 1)}</dd>
+                      </div>
+                      <div className="flex justify-between">
+                        <dt style={{ color: "var(--text-muted)" }}>Same person</dt>
+                        <dd className="tnum font-[family-name:var(--font-mono)]"
+                            style={{ color: c.purity_by_subject > 0.5 ? "var(--warn)" : undefined }}>
+                          {pct(c.purity_by_subject, 1)}
+                        </dd>
+                      </div>
+                    </dl>
+                  </div>
+                );
+              })}
+            </div>
+            <p className="mt-4 text-[13px] leading-relaxed" style={{ color: "var(--text-secondary)" }}>
+              Every island in the network&apos;s space holds exactly one person. Not most of
+              one, all of one. The hand-computed numbers land at{" "}
+              {pct(d.cluster_purity.td_features.purity_by_subject, 1)}, which is what you get
+              by chance with eight people ({pct(d.cluster_purity.td_features.chance_purity_by_subject, 1)}).
+              So the network did not build a space of gestures that happens to vary between
+              people. It built a space of people, and put the gestures inside each one.
+            </p>
+            <p className="mt-3 text-[12px] leading-relaxed" style={{ color: "var(--text-muted)" }}>
+              Islands are found with DBSCAN on the flattened view, so the count depends on
+              the settings. The gap between 100% and 14% does not.
             </p>
           </Card>
         </>
