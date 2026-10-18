@@ -3,7 +3,7 @@
 Reading hand gestures from four muscle sensors on a forearm, and checking how much of
 the accuracy people report for this task is actually real.
 
-**[Live site with the interactive results and a decoder you can run in your browser](https://myodecode.vercel.app)**
+**[Live site with the interactive results and a decoder you can run in your browser](https://emg-gesture-decoder.vercel.app)**
 
 ---
 
