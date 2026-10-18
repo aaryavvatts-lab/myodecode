@@ -1,4 +1,5 @@
 "use client";
+import Link from "next/link";
 // Dev-only: renders a single section at the top of the page for visual checking.
 import { useSearchParams } from "next/navigation";
 import { Suspense } from "react";
@@ -31,8 +32,8 @@ export default function Preview() {
   if (process.env.NODE_ENV === "production") {
     return (
       <main className="mx-auto max-w-2xl px-5 py-24">
-        <p className="text-[14px]" style={{ color: "var(--text-secondary)" }}>
-          This route is a development aid. Go to <a href="/" className="underline underline-offset-4">the site</a>.
+        <p className="text-body" style={{ color: "var(--text-secondary)" }}>
+          This route is a development aid. Go to <Link href="/" className="link">the site</Link>.
         </p>
       </main>
     );

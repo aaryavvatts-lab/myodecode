@@ -57,9 +57,9 @@ export default function Calibration() {
       </Card>
 
       <Card className="mt-4">
-        <h3 className="mb-1 text-[14px] font-medium">The answer is no</h3>
-        <p className="text-[13px] leading-relaxed" style={{ color: "var(--text-secondary)" }}>
-          Rescaling each person's measurements against their own signal costs nothing,
+        <h3 className="mb-1 text-body font-medium">The answer is no</h3>
+        <p className="text-body leading-relaxed" style={{ color: "var(--text-secondary)" }}>
+          Rescaling each person&apos;s measurements against their own signal costs nothing,
           happens instantly, and needs no help from the user. It is worth{" "}
           <strong style={{ color: "var(--text-primary)" }}>
             {((s.with_free_normalisation.zero_shot - s.without_normalisation.zero_shot) * 100).toFixed(1)} pp

@@ -52,7 +52,7 @@ export default function References() {
         <ol className="space-y-6">
           {REFS.map((r) => (
             <li key={r.doi}>
-              <p className="text-[14px] leading-snug">
+              <p className="text-body leading-snug">
                 {r.authors} ({r.year}).{" "}
                 <a href={`https://doi.org/${r.doi}`} target="_blank" rel="noopener noreferrer"
                    className="focusable underline underline-offset-4" style={{ color: "var(--accent)" }}>
@@ -60,10 +60,10 @@ export default function References() {
                 </a>
                 .
               </p>
-              <p className="mt-1 text-[13px]" style={{ color: "var(--text-muted)" }}>
+              <p className="mt-1 text-body" style={{ color: "var(--text-muted)" }}>
                 {r.venue}. Cited about {r.cites.toLocaleString()} times.
               </p>
-              <p className="mt-2 text-[13px] leading-relaxed" style={{ color: "var(--text-secondary)" }}>
+              <p className="mt-2 text-body leading-relaxed" style={{ color: "var(--text-secondary)" }}>
                 {r.why}
               </p>
             </li>
@@ -72,7 +72,7 @@ export default function References() {
       </Card>
 
       <Card className="mt-4">
-        <p className="text-[13px] leading-relaxed" style={{ color: "var(--text-secondary)" }}>
+        <p className="text-body leading-relaxed" style={{ color: "var(--text-secondary)" }}>
           The dataset itself has no citation, which is the one gap I could not close. It
           arrived as forty text files with no paper attached, and searching did not turn up
           a match. If you recognise it, please say so on the repository and I will credit

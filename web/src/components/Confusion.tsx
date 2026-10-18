@@ -34,7 +34,7 @@ export default function Confusion() {
         </>
       }
     >
-      <div className="grid gap-3 sm:grid-cols-3">
+      <div className="grid gap-8 sm:grid-cols-3">
         <Stat value={pct(confusion.share_of_errors_in_worst_pair, 0)}
               label={`Mistakes that are ${worst.a_label} and ${worst.b_label} mixed up`}
               sub="Out of every mistake the decoder makes" tone="warn" />
@@ -46,8 +46,8 @@ export default function Confusion() {
       </div>
 
       <Card className="mt-6">
-          <h3 className="mb-1 text-[14px] font-medium">Confusion matrix</h3>
-          <p className="mb-4 text-[13px]" style={{ color: "var(--text-secondary)" }}>
+          <h3 className="mb-1 text-body font-medium">Confusion matrix</h3>
+          <p className="mb-4 text-body" style={{ color: "var(--text-secondary)" }}>
             Every person tested while held out of training, then added up. Each row is
             what the gesture really was. Each column is what the decoder guessed.
           </p>
@@ -57,14 +57,14 @@ export default function Confusion() {
               <div className="grid gap-[2px]" style={{ gridTemplateColumns: "5.6rem repeat(5, 3.4rem)" }}>
                 <div />
                 {LABELS.map((n, j) => (
-                  <div key={j} className="pb-1 text-center text-[10px]" style={{ color: "var(--text-muted)" }}>
+                  <div key={j} className="pb-1 text-center text-small" style={{ color: "var(--text-muted)" }}>
                     {n.replace("Gesture ", "G")}
                   </div>
                 ))}
                 {LABELS.map((n, i) => (
                   <div key={i} className="contents">
-                    <div className="flex items-center justify-end gap-1.5 pr-2 text-[12px]">
-                      <span className="inline-block h-2.5 w-2.5 shrink-0 rounded-full" style={{ background: gcol[i] }} />
+                    <div className="flex items-center justify-end gap-1.5 pr-2 text-body">
+                      <span className="inline-block h-2.5 w-2.5 shrink-0" style={{ background: gcol[i] }} />
                       {n}
                     </div>
                     {LABELS.map((_, j) => {
@@ -75,7 +75,7 @@ export default function Confusion() {
                         <div key={j} className="relative">
                           <div
                             onMouseEnter={() => setHover(key)} onMouseLeave={() => setHover(null)}
-                            className="flex h-10 items-center justify-center rounded-[3px] text-[11px] font-medium"
+                            className="flex h-10 items-center justify-center text-small font-medium"
                             style={{
                               // Off-diagonal cells share one ramp scaled to the
                               // largest error, so a 0.9% cell cannot look like a 14% one.
@@ -90,7 +90,7 @@ export default function Confusion() {
                             {v < 0.001 ? "·" : (v * 100).toFixed(v >= 0.1 ? 0 : 1)}
                           </div>
                           {hover === key && (
-                            <div className="pointer-events-none absolute -top-1 left-1/2 z-20 -translate-x-1/2 -translate-y-full whitespace-nowrap rounded-lg border px-2.5 py-1.5 text-[12px] shadow-lg"
+                            <div className="pointer-events-none absolute -top-1 left-1/2 z-20 -translate-x-1/2 -translate-y-full whitespace-nowrap px-2.5 py-1.5 text-body"
                                  style={{ background: "var(--surface-0)" }}>
                               <div className="font-medium">{pct(v, 1)}</div>
                               <div style={{ color: "var(--text-secondary)" }}>
@@ -104,7 +104,7 @@ export default function Confusion() {
                   </div>
                 ))}
               </div>
-              <p className="mt-2 pl-[5.6rem] text-center text-[11px]" style={{ color: "var(--text-muted)" }}>
+              <p className="mt-2 pl-[5.6rem] text-center text-small" style={{ color: "var(--text-muted)" }}>
                 predicted
               </p>
             </div>
@@ -119,8 +119,8 @@ export default function Confusion() {
 
       <div className="mt-4 grid gap-4 lg:grid-cols-2 lg:items-start">
           <Card>
-            <h3 className="mb-1 text-[14px] font-medium">One pair does most of the damage</h3>
-            <p className="text-[13px] leading-relaxed" style={{ color: "var(--text-secondary)" }}>
+            <h3 className="mb-1 text-body font-medium">One pair does most of the damage</h3>
+            <p className="text-body leading-relaxed" style={{ color: "var(--text-secondary)" }}>
               <strong style={{ color: "var(--text-primary)" }}>
                 {pct(confusion.share_of_errors_in_worst_pair, 0)}
               </strong>{" "}
@@ -134,7 +134,7 @@ export default function Confusion() {
               confused with anything. Four quiet sensors is not a thing an active gesture
               can fake.
             </p>
-            <p className="mt-3 text-[13px] leading-relaxed" style={{ color: "var(--text-secondary)" }}>
+            <p className="mt-3 text-body leading-relaxed" style={{ color: "var(--text-secondary)" }}>
               If you were building something with this, that is good news. Five gestures
               at {pct(confusion.accuracy)} is really four gestures that work almost
               perfectly plus one pair that does not. Swap one of those two out for a
@@ -143,8 +143,8 @@ export default function Confusion() {
           </Card>
 
           <Card>
-            <h3 className="mb-1 text-[14px] font-medium">Could you have guessed which pair?</h3>
-            <p className="text-[13px] leading-relaxed" style={{ color: "var(--text-secondary)" }}>
+            <h3 className="mb-1 text-body font-medium">Could you have guessed which pair?</h3>
+            <p className="text-body leading-relaxed" style={{ color: "var(--text-secondary)" }}>
               Out of all {confusion.n_pairs} possible pairs, {worst.a_label} and{" "}
               {worst.b_label} sit{" "}
               <strong style={{ color: "var(--text-primary)" }}>closest together</strong>{" "}
@@ -153,7 +153,7 @@ export default function Confusion() {
               the four muscles in nearly the same proportions and at nearly the same
               strength, so there is very little left to tell them apart by.
             </p>
-            <p className="mt-3 text-[13px] leading-relaxed" style={{ color: "var(--text-muted)" }}>
+            <p className="mt-3 text-body leading-relaxed" style={{ color: "var(--text-muted)" }}>
               I would like to turn that into a rule, but it does not hold up across all{" "}
               {confusion.n_pairs} pairs. The correlation comes out at ρ ={" "}
               {corr.spearman_rho.toFixed(2)} with p = {corr.spearman_p.toFixed(2)}, which

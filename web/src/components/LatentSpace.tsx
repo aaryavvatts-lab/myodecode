@@ -89,11 +89,11 @@ function Scatter({ pts, colorBy, gesture, subject, mode }: {
         {centroids.map((c) => (
           <g key={c.g}>
             <text x={sx(c.x)} y={sy(c.y)} textAnchor="middle" dominantBaseline="middle"
-                  style={{ fontSize: 12, fontWeight: 700, fill: "var(--surface-2)", stroke: "var(--surface-2)", strokeWidth: 5, paintOrder: "stroke" }}>
+                  style={{ fontSize: 13, fontWeight: 700, fill: "var(--surface-2)", stroke: "var(--surface-2)", strokeWidth: 5, paintOrder: "stroke" }}>
               {GESTURE_NAMES[c.g]}
             </text>
             <text x={sx(c.x)} y={sy(c.y)} textAnchor="middle" dominantBaseline="middle"
-                  style={{ fontSize: 12, fontWeight: 700, fill: gcol[c.g] }}>
+                  style={{ fontSize: 13, fontWeight: 700, fill: gcol[c.g] }}>
               {GESTURE_NAMES[c.g]}
             </text>
           </g>
@@ -130,10 +130,10 @@ export default function LatentSpace() {
       }
     >
       {!d ? (
-        <Card><div className="h-72 animate-pulse rounded-lg" style={{ background: "var(--surface-2)" }} /></Card>
+        <Card><div className="h-72" style={{ background: "var(--surface-2)" }} /></Card>
       ) : (
         <>
-          <div className="grid gap-3 sm:grid-cols-3">
+          <div className="grid gap-8 sm:grid-cols-3">
             <Stat value={sil!.by_gesture.toFixed(3)} label="Grouped by gesture" sub="Higher is better" tone="accent" />
             <Stat value={sil!.by_subject.toFixed(3)} label="Grouped by person" sub="Lower is better" />
             <Stat value={(sil!.by_gesture - sil!.by_subject).toFixed(3)} label="Gesture minus person"
@@ -158,7 +158,7 @@ export default function LatentSpace() {
             {colorBy === "gesture" ? (
               <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1.5">
                 {GESTURE_NAMES.map((n, i) => (
-                  <span key={n} className="inline-flex items-center gap-1.5 text-[12px]" style={{ color: "var(--text-secondary)" }}>
+                  <span key={n} className="inline-flex items-center gap-1.5 text-body" style={{ color: "var(--text-secondary)" }}>
                     <svg width="12" height="12" viewBox="0 0 12 12">
                       <Marker shape={GESTURE_SHAPES[i]} x={6} y={6} r={4} fill={GESTURE_COLORS[mode][i]} opacity={1} />
                     </svg>
@@ -167,14 +167,14 @@ export default function LatentSpace() {
                 ))}
               </div>
             ) : (
-              <p className="mt-3 text-[12px]" style={{ color: "var(--text-secondary)" }}>
+              <p className="mt-3 text-body" style={{ color: "var(--text-secondary)" }}>
                 Shaded light to dark for people 1 through 8. If these formed eight tidy
                 blobs, the model would be sorting by person rather than by gesture. They
                 do not, which is the point.
               </p>
             )}
 
-            <p className="mt-4 text-[12px] leading-relaxed" style={{ color: "var(--text-muted)" }}>
+            <p className="mt-4 text-body leading-relaxed" style={{ color: "var(--text-muted)" }}>
               This flattens {d.points.gesture.length.toLocaleString()} windows down to two
               dimensions so they fit on a screen. Each person was run through the model
               that had never trained on them. The flattening is only for looking at. The
@@ -183,15 +183,15 @@ export default function LatentSpace() {
           </Card>
 
           <Card className="mt-4">
-            <h3 className="mb-1 text-[14px] font-medium">This one surprised me</h3>
-            <p className="text-[13px] leading-relaxed" style={{ color: "var(--text-secondary)" }}>
+            <h3 className="mb-1 text-body font-medium">This one surprised me</h3>
+            <p className="text-body leading-relaxed" style={{ color: "var(--text-secondary)" }}>
               The twenty numbers I work out by hand group strongly by gesture
               ({d.silhouette.td_features.by_gesture.toFixed(3)}) and slightly less than
               randomly by person ({d.silhouette.td_features.by_subject.toFixed(3)}). That
               is exactly what you want. Whatever they are measuring is about the hand, and
               they are close to blind to whose arm it is.
             </p>
-            <p className="mt-3 text-[13px] leading-relaxed" style={{ color: "var(--text-secondary)" }}>
+            <p className="mt-3 text-body leading-relaxed" style={{ color: "var(--text-secondary)" }}>
               The neural network does the opposite. Its sixty-four numbers group only
               weakly by gesture ({d.silhouette.cnn_latent.by_gesture.toFixed(3)}) and more
               strongly by person ({d.silhouette.cnn_latent.by_subject.toFixed(3)}). Given
@@ -199,7 +199,7 @@ export default function LatentSpace() {
               chose to encode was who was wearing the sensors. Nobody asked it to do that,
               and it is of no use for reading gestures off a stranger.
             </p>
-            <p className="mt-3 text-[13px] leading-relaxed" style={{ color: "var(--text-secondary)" }}>
+            <p className="mt-3 text-body leading-relaxed" style={{ color: "var(--text-secondary)" }}>
               It still classifies well, because the linear layer on top can pull out the
               gesture part and ignore the rest. But it explains why it never pulled ahead.
               It spent capacity on something that does not help. Both numbers are small in
@@ -209,8 +209,8 @@ export default function LatentSpace() {
           </Card>
 
           <Card className="mt-4">
-            <h3 className="mb-1 text-[14px] font-medium">Look at the shape of it</h3>
-            <p className="text-[13px] leading-relaxed" style={{ color: "var(--text-secondary)" }}>
+            <h3 className="mb-1 text-body font-medium">Look at the shape of it</h3>
+            <p className="text-body leading-relaxed" style={{ color: "var(--text-secondary)" }}>
               Switch the view above to what the network stores and you get a scatter of
               small islands instead of a few big groups. I counted them. There are{" "}
               <strong style={{ color: "var(--text-primary)" }}>
@@ -224,20 +224,20 @@ export default function LatentSpace() {
                 const c = d.cluster_purity[k];
                 const label = k === "cnn_latent" ? "What the network stores" : "The 20 hand-computed numbers";
                 return (
-                  <div key={k} className="rounded-lg border p-3" style={{ background: "var(--surface-2)" }}>
-                    <div className="text-[12px] font-medium">{label}</div>
-                    <dl className="mt-2 space-y-1 text-[12px]">
+                  <div key={k} className="p-3" style={{ background: "var(--surface-2)" }}>
+                    <div className="text-body font-medium">{label}</div>
+                    <dl className="mt-2 space-y-1 text-body">
                       <div className="flex justify-between">
                         <dt style={{ color: "var(--text-muted)" }}>Islands</dt>
-                        <dd className="tnum font-[family-name:var(--font-mono)]">{c.n_clusters}</dd>
+                        <dd className="tnum">{c.n_clusters}</dd>
                       </div>
                       <div className="flex justify-between">
                         <dt style={{ color: "var(--text-muted)" }}>Same gesture</dt>
-                        <dd className="tnum font-[family-name:var(--font-mono)]">{pct(c.purity_by_gesture, 1)}</dd>
+                        <dd className="tnum">{pct(c.purity_by_gesture, 1)}</dd>
                       </div>
                       <div className="flex justify-between">
                         <dt style={{ color: "var(--text-muted)" }}>Same person</dt>
-                        <dd className="tnum font-[family-name:var(--font-mono)]"
+                        <dd className="tnum"
                             style={{ color: c.purity_by_subject > 0.5 ? "var(--warn)" : undefined }}>
                           {pct(c.purity_by_subject, 1)}
                         </dd>
@@ -247,7 +247,7 @@ export default function LatentSpace() {
                 );
               })}
             </div>
-            <p className="mt-4 text-[13px] leading-relaxed" style={{ color: "var(--text-secondary)" }}>
+            <p className="mt-4 text-body leading-relaxed" style={{ color: "var(--text-secondary)" }}>
               Every island in the network&apos;s space holds exactly one person. Not most of
               one, all of one. The hand-computed numbers land at{" "}
               {pct(d.cluster_purity.td_features.purity_by_subject, 1)}, which is what you get
@@ -255,7 +255,7 @@ export default function LatentSpace() {
               So the network did not build a space of gestures that happens to vary between
               people. It built a space of people, and put the gestures inside each one.
             </p>
-            <p className="mt-3 text-[12px] leading-relaxed" style={{ color: "var(--text-muted)" }}>
+            <p className="mt-3 text-body leading-relaxed" style={{ color: "var(--text-muted)" }}>
               Islands are found with DBSCAN on the flattened view, so the count depends on
               the settings. The gap between 100% and 14% does not.
             </p>

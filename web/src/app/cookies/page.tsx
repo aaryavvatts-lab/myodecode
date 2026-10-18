@@ -10,7 +10,7 @@ export default function Cookies() {
   return (
     <LegalPage
       title="Cookies"
-      summary="This site sets no cookies at all. It stores one small item in your browser, and only if you dismiss the notice at the bottom of the screen. Nothing is used to track you."
+      summary="This site sets no cookies at all. It stores one small item in your browser, and only if you press the Light or Dark control in the header. Nothing is used to track you."
     >
       <H2>The short answer</H2>
       <P>
@@ -24,8 +24,8 @@ export default function Cookies() {
         One entry in local storage, which is a separate browser feature from cookies. It
         is never sent to a server. It looks like this:
       </P>
-      <div className="scroll-x mt-4 rounded-lg border">
-        <table className="w-full text-left text-[13px]">
+      <div className="scroll-x mt-4">
+        <table className="w-full text-left text-body">
           <thead>
             <tr style={{ background: "var(--surface-2)" }}>
               <th className="px-3 py-2 font-medium">Name</th>
@@ -35,15 +35,15 @@ export default function Cookies() {
             </tr>
           </thead>
           <tbody>
-            <tr className="border-t">
-              <td className="whitespace-nowrap px-3 py-2 font-[family-name:var(--font-mono)] text-[12px]">
-                myodecode-notice
+            <tr className="border-t">{/* table line, taste-skill-ignore */}
+              <td className="whitespace-nowrap px-3 py-2 text-body">
+                theme
               </td>
-              <td className="whitespace-nowrap px-3 py-2 font-[family-name:var(--font-mono)] text-[12px]">
-                dismissed
+              <td className="whitespace-nowrap px-3 py-2 text-body">
+                light or dark
               </td>
               <td className="px-3 py-2">
-                Remembers that you closed the notice bar so it does not reappear.
+                Keeps the colours you picked so the next page matches.
               </td>
               <td className="whitespace-nowrap px-3 py-2">Until you clear it</td>
             </tr>
@@ -52,14 +52,14 @@ export default function Cookies() {
       </div>
       <P>
         That is the entire list. It holds no identifier, no visit count, and no history.
-        If you never dismiss the notice, nothing is stored at all.
+        If you never press the theme control, nothing is stored at all.
       </P>
 
       <Note>
         Because the site sets nothing that tracks you, there is no consent to ask for and
         no &ldquo;reject all&rdquo; button that would do anything. A banner demanding
-        consent for storage that does not exist would be theatre. The notice bar is there
-        to tell you the situation, not to collect a decision.
+        consent for storage that does not exist would be theatre. This page is here to
+        tell you the situation, not to collect a decision.
       </Note>
 
       <H2>What this site does not use</H2>

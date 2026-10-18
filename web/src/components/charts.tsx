@@ -30,7 +30,7 @@ export function Axes({
           <g key={`y${t}`}>
             <line x1={m.l} x2={m.l + iw} y1={y} y2={y} stroke="var(--grid)" strokeWidth={1} />
             <text x={m.l - 8} y={y + 4} textAnchor="end" className="tnum"
-                  style={{ fontSize: 11, fill: "var(--text-muted)" }}>{fmtY(t)}</text>
+                  style={{ fontSize: 13, fill: "var(--text-muted)" }}>{fmtY(t)}</text>
           </g>
         );
       })}
@@ -38,13 +38,13 @@ export function Axes({
         const x = logX ? logX(t) : t;
         return (
           <text key={`x${t}`} x={x} y={m.t + ih + 18} textAnchor="middle" className="tnum"
-                style={{ fontSize: 11, fill: "var(--text-muted)" }}>{fmtX(t)}</text>
+                style={{ fontSize: 13, fill: "var(--text-muted)" }}>{fmtX(t)}</text>
         );
       })}
       <line x1={m.l} x2={m.l + iw} y1={m.t + ih} y2={m.t + ih} stroke="var(--border-strong)" strokeWidth={1} />
-      <text x={m.l + iw / 2} y={h - 2} textAnchor="middle" style={{ fontSize: 11, fill: "var(--text-muted)" }}>{xLabel}</text>
+      <text x={m.l + iw / 2} y={h - 2} textAnchor="middle" style={{ fontSize: 13, fill: "var(--text-muted)" }}>{xLabel}</text>
       <text transform={`translate(11,${m.t + ih / 2}) rotate(-90)`} textAnchor="middle"
-            style={{ fontSize: 11, fill: "var(--text-muted)" }}>{yLabel}</text>
+            style={{ fontSize: 13, fill: "var(--text-muted)" }}>{yLabel}</text>
     </g>
   );
 }
@@ -116,7 +116,7 @@ export function LineChart({
           <g key={a.label}>
             <line x1={sx(tf(a.x))} x2={sx(tf(a.x))} y1={m.t} y2={m.t + ih}
                   stroke="var(--text-muted)" strokeWidth={1} strokeDasharray="3 3" />
-            <text x={sx(tf(a.x)) + 5} y={m.t + 12} style={{ fontSize: 10, fill: "var(--text-muted)" }}>{a.label}</text>
+            <text x={sx(tf(a.x)) + 5} y={m.t + 12} style={{ fontSize: 13, fill: "var(--text-muted)" }}>{a.label}</text>
           </g>
         ))}
         {series.map((s) => (
@@ -145,9 +145,9 @@ export function LineChart({
           <div className="mb-1 font-medium">{(fmtTipX ?? String)(series[0].points[hover].x)}</div>
           {series.map((s) => (
             <div key={s.name} className="flex items-center gap-2">
-              <span className="inline-block h-2 w-2 rounded-full" style={{ background: s.color }} />
+              <span className="inline-block h-2 w-2" style={{ background: s.color }} />
               <span style={{ color: "var(--text-secondary)" }}>{s.name}</span>
-              <span className="tnum ml-auto font-[family-name:var(--font-mono)]">
+              <span className="tnum ml-auto">
                 {(fmtTipY ?? ((v: number) => v.toFixed(3)))(s.points[hover]?.y ?? NaN)}
               </span>
             </div>
@@ -164,8 +164,8 @@ export function Legend({ items }: { items: { name: string; color: string }[] }) 
   return (
     <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1.5">
       {items.map((i) => (
-        <span key={i.name} className="inline-flex items-center gap-1.5 text-[12px]" style={{ color: "var(--text-secondary)" }}>
-          <span className="inline-block h-2.5 w-2.5 rounded-[2px]" style={{ background: i.color }} />
+        <span key={i.name} className="inline-flex items-center gap-1.5 text-body" style={{ color: "var(--text-secondary)" }}>
+          <span className="inline-block h-2.5 w-2.5" style={{ background: i.color }} />
           {i.name}
         </span>
       ))}
@@ -173,7 +173,7 @@ export function Legend({ items }: { items: { name: string; color: string }[] }) 
   );
 }
 
-/** Horizontal bars, 4px rounded data-end anchored to the baseline. */
+/** Horizontal bars, 4px data-end anchored to the baseline. */
 export function BarRow({
   label, value, max, color, note, highlight, refLine, excessColor,
 }: {
@@ -185,29 +185,29 @@ export function BarRow({
 }) {
   const over = refLine !== undefined && value > refLine;
   const bar = (
-    <div className="relative h-7 overflow-hidden rounded-[4px]" style={{ background: "var(--surface-2)" }}>
-      <div className="absolute inset-y-0 left-0 rounded-[4px]" style={{
+    <div className="relative h-7 overflow-hidden" style={{ background: "var(--surface-2)" }}>
+      <div className="absolute inset-y-0 left-0" style={{
         width: `${(value / max) * 100}%`, background: color,
         outline: highlight ? "2px solid var(--text-primary)" : undefined, outlineOffset: -1,
       }} />
       {over && (
         <div className="absolute inset-y-0" style={{
           left: `${(refLine! / max) * 100}%`, width: `${((value - refLine!) / max) * 100}%`,
-          backgroundImage: `repeating-linear-gradient(135deg, ${excessColor ?? "rgba(255,255,255,.55)"} 0 2px, transparent 2px 5px)`,
+          background: excessColor ?? "color-mix(in oklab, var(--bg), transparent 45%)",
         }} />
       )}
       {refLine !== undefined && (
-        <div className="absolute inset-y-0 w-px" style={{ left: `${(refLine / max) * 100}%`, background: "var(--text-primary)", opacity: 0.75 }} />
+        <div className="absolute inset-y-0 w-0.5" style={{ left: `${(refLine / max) * 100}%`, background: "var(--text-primary)", opacity: 0.75 }} />
       )}
       {note && (
-        <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[11px]" style={{ color: "var(--text-muted)" }}>
+        <span className="absolute right-2 top-1/2 -translate-y-1/2 text-small" style={{ color: "var(--text-muted)" }}>
           {note}
         </span>
       )}
     </div>
   );
   const readout = (
-    <span className="tnum font-[family-name:var(--font-mono)] text-[13px]">
+    <span className="tnum text-body">
       {(value * 100).toFixed(1)}%
     </span>
   );
@@ -216,7 +216,7 @@ export function BarRow({
   return (
     <div className="py-1.5 sm:grid sm:grid-cols-[minmax(0,11rem)_1fr_auto] sm:items-center sm:gap-3">
       <div className="mb-1 flex items-baseline justify-between gap-3 sm:mb-0 sm:block">
-        <span className="text-[13px] leading-tight">{label}</span>
+        <span className="text-body leading-tight">{label}</span>
         <span className="shrink-0 sm:hidden">{readout}</span>
       </div>
       {bar}

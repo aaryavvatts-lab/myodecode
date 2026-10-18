@@ -61,15 +61,15 @@ export default function Leakage() {
         </>
       }
     >
-      <div className="grid gap-3 sm:grid-cols-3">
+      <div className="grid gap-8 sm:grid-cols-3">
         <Stat value={pct(top)} label="Shuffled split" sub="What the popular method reports" tone="warn" />
         <Stat value={pct(honest)} label="New person" sub="What it gets on someone it has not seen" tone="accent" />
         <Stat value={pp(honest - top)} label="Difference" sub="None of this gap is the model getting better" />
       </div>
 
       <Card className="mt-6">
-        <h3 className="mb-1 text-[14px] font-medium">See what each split actually does</h3>
-        <p className="mb-5 text-[13px]" style={{ color: "var(--text-secondary)" }}>
+        <h3 className="mb-1 text-body font-medium">See what each split actually does</h3>
+        <p className="mb-5 text-body" style={{ color: "var(--text-secondary)" }}>
           Each row is one person&apos;s recording, cut into windows left to right. Blue
           windows go into training, orange ones are held back for the test. Switch
           between the four options and watch where the orange lands.
@@ -78,8 +78,8 @@ export default function Leakage() {
       </Card>
 
       <Card className="mt-4">
-        <h3 className="mb-1 text-[14px] font-medium">What that does to the score</h3>
-        <p className="mb-4 text-[13px]" style={{ color: "var(--text-secondary)" }}>
+        <h3 className="mb-1 text-body font-medium">What that does to the score</h3>
+        <p className="mb-4 text-body" style={{ color: "var(--text-secondary)" }}>
           The model is the same every time. Five simple measurements per sensor, fed into
           a linear classifier.
         </p>
@@ -89,7 +89,7 @@ export default function Leakage() {
             label={
               <span>
                 <span className="font-medium">{row.title}</span>
-                <span className="ml-1.5 font-[family-name:var(--font-mono)] text-[10px] uppercase tracking-wide"
+                <span className="ml-1.5 text-small"
                       style={{ color: row.honest ? "var(--accent)" : "var(--warn)" }}>
                   {row.honest ? "honest" : "leaky"}
                 </span>
@@ -102,24 +102,24 @@ export default function Leakage() {
             refLine={honest}
           />
         ))}
-        <p className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px]" style={{ color: "var(--text-muted)" }}>
+        <p className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-small" style={{ color: "var(--text-muted)" }}>
           <span className="inline-flex items-center gap-1.5">
-            <span className="inline-block h-3 w-px" style={{ background: "var(--text-primary)", opacity: 0.75 }} />
+            <span className="inline-block h-3 w-0.5" style={{ background: "var(--text-primary)", opacity: 0.75 }} />
             honest score ({pct(honest)})
           </span>
           <span className="inline-flex items-center gap-1.5">
-            <span className="inline-block h-3 w-4 rounded-[2px]"
-                  style={{ backgroundImage: "repeating-linear-gradient(135deg, var(--text-muted) 0 2px, transparent 2px 5px)" }} />
-            striped part is accuracy that only exists because of the shortcut
+            <span className="inline-block h-3 w-4"
+                  style={{ background: "var(--warn)", opacity: 0.55 }} />
+            paler part is accuracy that only exists because of the shortcut
           </span>
         </p>
         <button onClick={() => setShowAll(!showAll)}
-                className="focusable mt-3 font-[family-name:var(--font-mono)] text-[11px] uppercase tracking-wider underline underline-offset-4"
+                className="focusable mt-3 text-small r underline underline-offset-4"
                 style={{ color: "var(--text-muted)" }}>
           {showAll ? "Hide" : "What each one means"}
         </button>
         {showAll && (
-          <dl className="mt-3 space-y-2 text-[13px]">
+          <dl className="mt-3 space-y-2 text-body">
             {rows.map((r) => (
               <div key={r.scheme}>
                 <dt className="font-medium">{r.title}</dt>
@@ -140,8 +140,8 @@ export default function Leakage() {
 
       <div className="mt-6 grid gap-4 lg:grid-cols-2">
         <Card>
-          <h3 className="mb-1 text-[14px] font-medium">Where the problem actually comes from</h3>
-          <p className="text-[13px] leading-relaxed" style={{ color: "var(--text-secondary)" }}>
+          <h3 className="mb-1 text-body font-medium">Where the problem actually comes from</h3>
+          <p className="text-body leading-relaxed" style={{ color: "var(--text-secondary)" }}>
             Splitting each recording by time, while still training on the very same
             people, drops accuracy from{" "}
             <strong style={{ color: "var(--text-primary)" }}>{pct(top)}</strong> to{" "}
@@ -151,7 +151,7 @@ export default function Leakage() {
             <strong style={{ color: "var(--text-primary)" }}>{pct(honest)}</strong>,
             which is the same number once you account for noise.
           </p>
-          <p className="mt-3 text-[13px] leading-relaxed" style={{ color: "var(--text-secondary)" }}>
+          <p className="mt-3 text-body leading-relaxed" style={{ color: "var(--text-secondary)" }}>
             So whether the model has met you before barely matters here. What mattered
             was that the first split let it train on windows sitting right next to the
             ones it was graded on. People usually blame the differences between bodies
@@ -159,25 +159,25 @@ export default function Leakage() {
           </p>
         </Card>
         <Card>
-          <h3 className="mb-1 text-[14px] font-medium">Is {pct(honest)} real, though?</h3>
-          <p className="text-[13px] leading-relaxed" style={{ color: "var(--text-secondary)" }}>
+          <h3 className="mb-1 text-body font-medium">Is {pct(honest)} real, though?</h3>
+          <p className="text-body leading-relaxed" style={{ color: "var(--text-secondary)" }}>
             To check, I scrambled the gesture labels {perm.n} times and ran the whole
             thing again each time. With the labels meaningless, the model scored{" "}
-            <span className="tnum font-[family-name:var(--font-mono)]">{pct(perm.mean, 1)}</span>{" "}
+            <span className="tnum">{pct(perm.mean, 1)}</span>{" "}
             on average, and never got above {pct(perm.max, 1)}. That is exactly the{" "}
             {pct(perm.theoretical_chance, 0)} you would expect from guessing between five
             options. The real score is nowhere near that range, at{" "}
-            <span className="tnum font-[family-name:var(--font-mono)]">p = {perm.p_value.toFixed(3)}</span>.
+            <span className="tnum">p = {perm.p_value.toFixed(3)}</span>.
             So the signal is there. It is just five points smaller than advertised.
           </p>
         </Card>
       </div>
 
       <Card className="mt-4">
-        <h3 className="mb-1 text-[14px] font-medium">
+        <h3 className="mb-1 text-body font-medium">
           The neural network does not win
         </h3>
-        <p className="mb-4 text-[13px]" style={{ color: "var(--text-secondary)" }}>
+        <p className="mb-4 text-body" style={{ color: "var(--text-secondary)" }}>
           All four models tested on a held out person, using a quarter second of
           signal<Inferred />. The best score here comes from a set of measurements
           published in 1993, plus one rescaling step that is free and needs no labels.

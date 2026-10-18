@@ -1,27 +1,22 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Reveal from "./Reveal";
 
+/* Shared page furniture. `eyebrow` is still accepted so the section components compile, but
+   it is not rendered: no kicker labels above headings. */
 export function Section({
-  id, eyebrow, title, lede, children,
+  id, title, lede, children,
 }: {
-  id: string; eyebrow: string; title: string; lede?: React.ReactNode; children: React.ReactNode;
+  id: string; eyebrow?: string; title: string; lede?: React.ReactNode; children: React.ReactNode;
 }) {
   return (
-    <section id={id} className="scroll-mt-16 border-t py-16 sm:py-24">
-      <div className="mx-auto max-w-5xl px-5">
-        <p className="mb-3 font-[family-name:var(--font-mono)] text-[11px] uppercase tracking-[0.18em]"
-           style={{ color: "var(--text-muted)" }}>
-          {eyebrow}
-        </p>
-        <h2 className="max-w-3xl text-balance text-3xl leading-[1.15] tracking-tight sm:text-4xl font-[family-name:var(--font-serif)]">
-          {title}
-        </h2>
-        {lede && (
-          <div className="mt-4 max-w-2xl text-[15px] leading-relaxed" style={{ color: "var(--text-secondary)" }}>
-            {lede}
-          </div>
-        )}
+    <section id={id} className="sect">
+      <div className="mx-auto max-w-6xl wrap">
+        <Reveal as="div">
+          <h2>{title}</h2>
+          {lede && <div className="lede">{lede}</div>}
+        </Reveal>
         <div className="mt-10">{children}</div>
       </div>
     </section>
@@ -29,36 +24,27 @@ export function Section({
 }
 
 export function Card({ children, className = "" }: { children: React.ReactNode; className?: string }) {
-  return (
-    <div className={`rounded-xl border p-5 ${className}`} style={{ background: "var(--surface-1)" }}>
-      {children}
-    </div>
-  );
+  return <div className={`card ${className}`}>{children}</div>;
 }
 
 export function Stat({ value, label, sub, tone = "default" }: {
   value: string; label: string; sub?: string; tone?: "default" | "accent" | "warn";
 }) {
-  const color = tone === "accent" ? "var(--accent)" : tone === "warn" ? "var(--warn)" : "var(--text-primary)";
+  const color = tone === "accent" ? "var(--accent)" : tone === "warn" ? "var(--warn)" : "var(--ink)";
   return (
-    <div className="rounded-xl border p-4" style={{ background: "var(--surface-1)" }}>
-      <div className="tnum font-[family-name:var(--font-mono)] text-2xl sm:text-[28px] leading-none" style={{ color }}>
-        {value}
-      </div>
-      <div className="mt-2 text-[13px] font-medium">{label}</div>
-      {sub && <div className="mt-1 text-[12px] leading-snug" style={{ color: "var(--text-muted)" }}>{sub}</div>}
+    <div className="stat">
+      <div className="n" style={{ color }}>{value}</div>
+      <div className="k">{label}</div>
+      {sub && <div className="s">{sub}</div>}
     </div>
   );
 }
 
-export function Inferred({ children = "Inferred, not given" }: { children?: React.ReactNode }) {
+export function Inferred({ children = "inferred, not given" }: { children?: React.ReactNode }) {
   return (
-    <span
-      className="ml-1.5 inline-flex items-center rounded-full border px-1.5 py-px align-middle font-[family-name:var(--font-mono)] text-[10px] uppercase tracking-wide"
-      style={{ background: "var(--warn-soft)", color: "var(--warn)", borderColor: "transparent" }}
-      title="This quantity was derived from the signal itself, not supplied with the dataset."
-    >
-      {children}
+    <span className="ml-1" style={{ color: "var(--muted)" }}
+      title="This quantity was derived from the signal itself, not supplied with the dataset.">
+      ({children})
     </span>
   );
 }
@@ -67,26 +53,14 @@ export function Toggle<T extends string>({ options, value, onChange, label }: {
   options: { value: T; label: string }[]; value: T; onChange: (v: T) => void; label?: string;
 }) {
   return (
-    <div className="flex flex-wrap items-center gap-2">
-      {label && <span className="mr-1 text-[12px]" style={{ color: "var(--text-muted)" }}>{label}</span>}
-      <div className="inline-flex rounded-lg border p-0.5" style={{ background: "var(--surface-2)" }} role="tablist">
-        {options.map((o) => (
-          <button
-            key={o.value}
-            role="tab"
-            aria-selected={value === o.value}
-            onClick={() => onChange(o.value)}
-            className="focusable rounded-[6px] px-3 py-1.5 text-[13px] font-medium transition-colors"
-            style={
-              value === o.value
-                ? { background: "var(--surface-0)", color: "var(--text-primary)", boxShadow: "0 1px 2px rgba(0,0,0,.08)" }
-                : { color: "var(--text-secondary)" }
-            }
-          >
-            {o.label}
-          </button>
-        ))}
-      </div>
+    <div className="flex flex-wrap items-center gap-2" role="group" aria-label={label}>
+      {label && <span className="mr-1 text-small" style={{ color: "var(--muted)" }}>{label}</span>}
+      {options.map((o) => (
+        <button key={o.value} type="button" aria-pressed={value === o.value} onClick={() => onChange(o.value)}
+          className="focusable chip text-small font-medium">
+          {o.label}
+        </button>
+      ))}
     </div>
   );
 }
@@ -97,27 +71,25 @@ export function TableView({ headers, rows, caption }: {
   const [open, setOpen] = useState(false);
   return (
     <div className="mt-4">
-      <button onClick={() => setOpen(!open)}
-        className="focusable font-[family-name:var(--font-mono)] text-[11px] uppercase tracking-wider underline underline-offset-4"
-        style={{ color: "var(--text-muted)" }}>
-        {open ? "Hide" : "Show"} data table
+      <button type="button" onClick={() => setOpen(!open)} className="focusable textbtn text-small">
+        {open ? "Hide" : "Show"} the data table
       </button>
       {open && (
-        <div className="scroll-x mt-3 rounded-lg border">
-          <table className="w-full text-left text-[13px]">
-            {caption && <caption className="px-3 pt-3 text-left text-[12px]" style={{ color: "var(--text-muted)" }}>{caption}</caption>}
+        <div className="scroll-x mt-3">
+          <table className="w-full text-left text-small">
+            {caption && <caption className="pb-2 text-left text-small" style={{ color: "var(--muted)" }}>{caption}</caption>}
             <thead>
-              <tr style={{ background: "var(--surface-2)" }}>
+              <tr>
                 {headers.map((h) => (
-                  <th key={h} className="whitespace-nowrap px-3 py-2 font-medium">{h}</th>
+                  <th key={h} className="whitespace-nowrap border-b py-2 pr-4 font-semibold">{/* table line, taste-skill-ignore */}{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
               {rows.map((r, i) => (
-                <tr key={i} className="border-t">
+                <tr key={i} className="border-t">{/* table line, taste-skill-ignore */}
                   {r.map((c, j) => (
-                    <td key={j} className="tnum whitespace-nowrap px-3 py-1.5 font-[family-name:var(--font-mono)] text-[12px]">{c}</td>
+                    <td key={j} className="tnum whitespace-nowrap py-1.5 pr-4">{c}</td>
                   ))}
                 </tr>
               ))}
@@ -129,12 +101,12 @@ export function TableView({ headers, rows, caption }: {
   );
 }
 
-/** Tooltip anchored to a chart, positioned in client coords. */
+/** Tooltip anchored to a chart, positioned in client coords. A real overlay, on a surface. */
 export function Tip({ x, y, children }: { x: number; y: number; children: React.ReactNode }) {
   return (
     <div
-      className="pointer-events-none absolute z-20 rounded-lg border px-2.5 py-1.5 text-[12px] shadow-lg"
-      style={{ left: x, top: y, transform: "translate(-50%,-115%)", background: "var(--surface-0)", whiteSpace: "nowrap" }}
+      className="pointer-events-none absolute z-20 px-2.5 py-1.5 text-small"
+      style={{ left: x, top: y, transform: "translate(-50%,-115%)", background: "var(--surface-2)", whiteSpace: "nowrap" }}
     >
       {children}
     </div>

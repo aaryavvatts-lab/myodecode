@@ -38,9 +38,9 @@ export default function Accessibility() {
 
       <H2>Motion</H2>
       <P>
-        The scrolling signal at the top of the page and the live decoder both animate. If
-        your system is set to reduce motion, the animation stops and you get a still
-        picture instead. The decoder only ever moves after you press start.
+        Sections fade in once as they come into view, the title rises once on load, and the
+        live decoder animates after you press start. If your system is set to reduce motion,
+        all of that is switched off and nothing is hidden while waiting for a script.
       </P>
 
       <H2>Structure and screen readers</H2>
@@ -49,7 +49,7 @@ export default function Accessibility() {
         <li>Sections are marked up as sections with real headings rather than styled text.</li>
         <li>Toggle buttons report whether they are pressed.</li>
         <li>Charts drawn as images carry a text description, and the underlying numbers are in the data tables.</li>
-        <li>Browser zoom to 200 percent works without content being cut off or overlapping. Note that sizes are set in pixels, so changing only the browser font size will not scale the page. Zoom will.</li>
+        <li>Browser zoom to 200 percent works without content being cut off or overlapping. Text is set in relative units, so changing your browser font size scales the page too.</li>
         <li>Every chart drawn as a picture carries a description saying what it shows and pointing at the data table below it.</li>
       </UL>
 

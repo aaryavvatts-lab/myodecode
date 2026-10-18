@@ -56,7 +56,7 @@ export default function Latency() {
         </>
       }
     >
-      <div className="grid gap-3 sm:grid-cols-3">
+      <div className="grid gap-8 sm:grid-cols-3">
         <Stat value={`${best.knee_window_ms} ms`} label="Sweet spot"
               sub={`Shortest window still within 1 point of the best score (${pct(best.peak_accuracy)})`} tone="accent" />
         <Stat value={pct(sweep[0].models.td_lda_znorm.accuracy)} label={`With only ${sweep[0].window_ms} ms`}
@@ -67,7 +67,7 @@ export default function Latency() {
 
       <Card className="mt-6">
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-          <h3 className="text-[14px] font-medium">Accuracy against how long you wait</h3>
+          <h3 className="text-body font-medium">Accuracy against how long you wait</h3>
           <Toggle value={xAxis} onChange={setXAxis} label="x-axis"
                   options={[{ value: "window", label: "Wait only" },
                             { value: "endtoend", label: "Plus compute" }]} />
@@ -86,7 +86,7 @@ export default function Latency() {
           fmtTipY={(v) => pct(v, 1)}
           annotations={[{ x: best.knee_window_ms, label: `sweet spot, ${best.knee_window_ms} ms` }]}
         />
-        <p className="mt-3 text-[12px] leading-relaxed" style={{ color: "var(--text-muted)" }}>
+        <p className="mt-3 text-body leading-relaxed" style={{ color: "var(--text-muted)" }}>
           The shaded bands show how much the score moves depending on which people you
           test on. They are wide because eight people is not many. That width is real
           uncertainty, so I left it in rather than hiding it.
@@ -105,7 +105,7 @@ export default function Latency() {
       </Card>
 
       <Card className="mt-4">
-        <h3 className="mb-3 text-[14px] font-medium">Pick how long you are willing to wait</h3>
+        <h3 className="mb-3 text-body font-medium">Pick how long you are willing to wait</h3>
         <input
           type="range" min={0} max={sweep.length - 1} value={pick}
           onChange={(e) => setPick(Number(e.target.value))}
@@ -113,10 +113,10 @@ export default function Latency() {
           aria-label="Length of signal used"
         />
         <div className="mt-4 grid gap-4 sm:grid-cols-[auto_1fr] sm:items-center">
-          <div className="tnum font-[family-name:var(--font-mono)] text-4xl" style={{ color: "var(--accent)" }}>
-            {row.window_ms}<span className="text-xl"> ms</span>
+          <div className="tnum" style={{ color: "var(--accent)" }}>
+            {row.window_ms}<span> ms</span>
           </div>
-          <p className="text-[14px] leading-relaxed" style={{ color: "var(--text-secondary)" }}>
+          <p className="text-body leading-relaxed" style={{ color: "var(--text-secondary)" }}>
             An answer every <strong style={{ color: "var(--text-primary)" }}>{row.window_ms} ms</strong>{" "}
             <Inferred>assumes 1 kHz</Inferred>, at{" "}
             <strong style={{ color: "var(--text-primary)" }}>{pct(row.models.td_lda_znorm.accuracy)}</strong>{" "}

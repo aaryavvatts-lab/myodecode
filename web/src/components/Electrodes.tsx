@@ -40,7 +40,7 @@ export default function Electrodes() {
         </>
       }
     >
-      <div className="grid gap-3 sm:grid-cols-3">
+      <div className="grid gap-8 sm:grid-cols-3">
         <Stat value={pct(full.models.td_lda_znorm.accuracy)} label="All four sensors" sub="The best you can do here" />
         <Stat value={pct(bestPair.accuracy)} label={`Best two, sensors ${listJoin(bestPair.channels)}`}
               sub={`Half the hardware for ${((full.models.td_lda_znorm.accuracy - bestPair.accuracy) * 100).toFixed(1)} points less accuracy`} tone="accent" />
@@ -49,8 +49,8 @@ export default function Electrodes() {
       </div>
 
       <Card className="mt-6">
-        <h3 className="mb-1 text-[14px] font-medium">Turn sensors on and off</h3>
-        <p className="mb-5 text-[13px]" style={{ color: "var(--text-secondary)" }}>
+        <h3 className="mb-1 text-body font-medium">Turn sensors on and off</h3>
+        <p className="mb-5 text-body" style={{ color: "var(--text-secondary)" }}>
           I trained and tested a separate model for every combination, so these are real
           measured scores, not guesses from a formula.
         </p>
@@ -58,11 +58,11 @@ export default function Electrodes() {
           {ALL.map((c) => (
             <button key={c} onClick={() => toggle(c)}
               aria-pressed={on.includes(c)}
-              className="focusable flex items-center gap-2 rounded-lg border px-3.5 py-2 text-[13px] font-medium transition-colors"
+              className="focusable flex items-center gap-2 px-3.5 py-2 text-body font-medium transition-colors"
               style={on.includes(c)
                 ? { background: ccol[c - 1], color: onColor(ccol[c - 1]), borderColor: ccol[c - 1] }
                 : { color: "var(--text-muted)" }}>
-              <span className="inline-block h-2.5 w-2.5 rounded-full"
+              <span className="inline-block h-2.5 w-2.5"
                     style={{ background: on.includes(c) ? "currentColor" : "var(--border-strong)" }} />
               Sensor {c}
             </button>
@@ -70,10 +70,10 @@ export default function Electrodes() {
         </div>
 
         <div className="mt-6 flex flex-wrap items-baseline gap-x-4 gap-y-2">
-          <div className="tnum font-[family-name:var(--font-mono)] text-5xl" style={{ color: "var(--accent)" }}>
+          <div className="tnum" style={{ color: "var(--accent)" }}>
             {current ? pct(current.models.td_lda_znorm.accuracy) : "n/a"}
           </div>
-          <div className="text-[14px]" style={{ color: "var(--text-secondary)" }}>
+          <div className="text-body" style={{ color: "var(--text-secondary)" }}>
             {on.length === 0
               ? "Turn at least one sensor on."
               : <>using {plural(on.length, "sensor")} ({listJoin(on)}), tested on a person
@@ -81,7 +81,7 @@ export default function Electrodes() {
           </div>
         </div>
         {current && on.length > 0 && on.length < 4 && (
-          <p className="mt-2 text-[13px]" style={{ color: "var(--text-muted)" }}>
+          <p className="mt-2 text-body" style={{ color: "var(--text-muted)" }}>
             That is {((full.models.td_lda_znorm.accuracy - current.models.td_lda_znorm.accuracy) * 100).toFixed(1)} points
             below using all four.
           </p>
@@ -90,27 +90,27 @@ export default function Electrodes() {
 
       <div className="mt-4 grid gap-4 lg:grid-cols-2">
         <Card>
-          <h3 className="mb-4 text-[14px] font-medium">Best you can do with each number of sensors</h3>
+          <h3 className="mb-4 text-body font-medium">Best you can do with each number of sensors</h3>
           <div className="space-y-2.5">
             {[1, 2, 3, 4].map((n) => {
               const f = frontier[String(n)];
               return (
                 <div key={n} className="grid grid-cols-[5.4rem_1fr_4.2rem_3.4rem] items-center gap-2">
-                  <span className="text-[13px]">{plural(n, "sensor")}</span>
-                  <div className="h-6 rounded-[4px]" style={{ background: "var(--surface-2)" }}>
-                    <div className="h-full rounded-[4px]"
+                  <span className="text-body">{plural(n, "sensor")}</span>
+                  <div className="h-6" style={{ background: "var(--surface-2)" }}>
+                    <div className="h-full"
                          style={{ width: `${f.accuracy * 100}%`, background: sequentialColor(0.3 + n * 0.17) }} />
                   </div>
-                  <span className="font-[family-name:var(--font-mono)] text-[11px]"
+                  <span className="text-small"
                         style={{ color: "var(--text-muted)" }}>{listJoin(f.channels)}</span>
-                  <span className="tnum text-right font-[family-name:var(--font-mono)] text-[13px]">
+                  <span className="tnum text-right text-body">
                     {pct(f.accuracy)}
                   </span>
                 </div>
               );
             })}
           </div>
-          <p className="mt-4 text-[12px] leading-relaxed" style={{ color: "var(--text-muted)" }}>
+          <p className="mt-4 text-body leading-relaxed" style={{ color: "var(--text-muted)" }}>
             Going from two sensors to four gains you{" "}
             {((frontier["4"].accuracy - frontier["2"].accuracy) * 100).toFixed(1)} points.
             Whether that is worth doubling the hardware is a decision about the product,
@@ -119,22 +119,22 @@ export default function Electrodes() {
         </Card>
 
         <Card>
-          <h3 className="mb-4 text-[14px] font-medium">What each sensor can do by itself</h3>
+          <h3 className="mb-4 text-body font-medium">What each sensor can do by itself</h3>
           <div className="space-y-2.5">
             {singles.map((s) => (
               <div key={s.channels[0]} className="grid grid-cols-[5.4rem_1fr_3.4rem] items-center gap-2">
-                <span className="text-[13px]">Sensor {s.channels[0]}</span>
-                <div className="h-6 rounded-[4px]" style={{ background: "var(--surface-2)" }}>
-                  <div className="h-full rounded-[4px]"
+                <span className="text-body">Sensor {s.channels[0]}</span>
+                <div className="h-6" style={{ background: "var(--surface-2)" }}>
+                  <div className="h-full"
                        style={{ width: `${s.models.td_lda_znorm.accuracy * 100}%`, background: ccol[s.channels[0] - 1] }} />
                 </div>
-                <span className="tnum text-right font-[family-name:var(--font-mono)] text-[13px]">
+                <span className="tnum text-right text-body">
                   {pct(s.models.td_lda_znorm.accuracy)}
                 </span>
               </div>
             ))}
           </div>
-          <p className="mt-4 text-[12px] leading-relaxed" style={{ color: "var(--text-muted)" }}>
+          <p className="mt-4 text-body leading-relaxed" style={{ color: "var(--text-muted)" }}>
             The best pair is not just the two best singles put together. Sensors are worth
             more when they disagree with each other than when they say the same thing.
             Guessing at random would score 20%.
@@ -143,8 +143,8 @@ export default function Electrodes() {
       </div>
 
       <Card className="mt-4">
-        <h3 className="mb-1 text-[14px] font-medium">Speed and sensor count together</h3>
-        <p className="mb-4 text-[13px]" style={{ color: "var(--text-secondary)" }}>
+        <h3 className="mb-1 text-body font-medium">Speed and sensor count together</h3>
+        <p className="mb-4 text-body" style={{ color: "var(--text-secondary)" }}>
           The best combination of each size, at each amount of signal. Darker means more
           accurate. Use it to find the cheapest setup that hits the score you need.
         </p>
@@ -152,7 +152,7 @@ export default function Electrodes() {
         <div className="mt-5 grid gap-2 sm:grid-cols-2">
           {Object.entries(tradeoff.targets as Record<string, { fewest_electrodes: { n_channels: number; window_ms: number; channels: number[] }; lowest_latency: { n_channels: number; window_ms: number; channels: number[] } } | null>)
             .map(([t, v]) => (
-              <div key={t} className="rounded-lg border p-3 text-[13px]" style={{ background: "var(--surface-2)" }}>
+              <div key={t} className="p-3 text-body" style={{ background: "var(--surface-2)" }}>
                 <span className="font-medium">To hit {pct(Number(t), 0)}</span>
                 {v ? (
                   <ul className="mt-1 space-y-0.5" style={{ color: "var(--text-secondary)" }}>
@@ -183,12 +183,12 @@ function Heatmap() {
         <div className="grid gap-[2px]" style={{ gridTemplateColumns: `2.6rem repeat(${windows.length}, minmax(0,1fr))` }}>
           <div />
           {windows.map((w) => (
-            <div key={w} className="pb-1 text-center font-[family-name:var(--font-mono)] text-[10px]"
+            <div key={w} className="pb-1 text-center text-small"
                  style={{ color: "var(--text-muted)" }}>{w}</div>
           ))}
           {counts.slice().reverse().map((n) => (
             <div key={n} className="contents">
-              <div className="flex items-center justify-end pr-2 font-[family-name:var(--font-mono)] text-[11px]"
+              <div className="flex items-center justify-end pr-2 text-small"
                    style={{ color: "var(--text-muted)" }}>{n} ch</div>
               {windows.map((w) => {
                 const c = cells.find((x) => x.window_ms === w && x.n_channels === n);
@@ -199,7 +199,7 @@ function Heatmap() {
                   <div key={w} className="relative">
                     <div
                       onMouseEnter={() => setHover(key)} onMouseLeave={() => setHover(null)}
-                      className="flex h-9 items-center justify-center rounded-[3px] text-[10px] font-medium transition-transform"
+                      className="flex h-9 items-center justify-center text-small font-medium transition-transform"
                       style={{
                         background: sequentialColor(t),
                         color: t > 0.55 ? "#fff" : "var(--text-primary)",
@@ -209,7 +209,7 @@ function Heatmap() {
                       {Math.round(c.accuracy * 100)}
                     </div>
                     {hover === key && (
-                      <div className="pointer-events-none absolute -top-1 left-1/2 z-20 -translate-x-1/2 -translate-y-full whitespace-nowrap rounded-lg border px-2.5 py-1.5 text-[12px] shadow-lg"
+                      <div className="pointer-events-none absolute -top-1 left-1/2 z-20 -translate-x-1/2 -translate-y-full whitespace-nowrap px-2.5 py-1.5 text-body"
                            style={{ background: "var(--surface-0)" }}>
                         <div className="font-medium">{pct(c.accuracy, 1)}</div>
                         <div style={{ color: "var(--text-secondary)" }}>{w} ms · ch {c.channels.join("+")}</div>
@@ -221,7 +221,7 @@ function Heatmap() {
             </div>
           ))}
         </div>
-        <div className="mt-2 pl-[2.6rem] text-center text-[11px]" style={{ color: "var(--text-muted)" }}>
+        <div className="mt-2 pl-[2.6rem] text-center text-small" style={{ color: "var(--text-muted)" }}>
           length of signal used (ms)
         </div>
       </div>

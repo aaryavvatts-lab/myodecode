@@ -125,13 +125,13 @@ export default function SplitViewer({ onScheme }: { onScheme?: (s: Scheme) => vo
            aria-label={`Timeline showing which windows are used for training and testing under the ${COPY[scheme].label} split`}>
         {grid.map((row, p) => (
           <div key={p} className="flex items-center gap-2">
-            <span className="w-16 shrink-0 font-[family-name:var(--font-mono)] text-[10px]"
+            <span className="w-16 shrink-0 text-small"
                   style={{ color: "var(--text-muted)" }}>
               person {p + 1}
             </span>
             <div className="flex h-4 flex-1 gap-[1px]">
               {row.map((role, b) => (
-                <div key={b} className="h-full flex-1 rounded-[1px]"
+                <div key={b} className="h-full flex-1"
                      style={{ background: ROLE_STYLE[role].bg }} />
               ))}
             </div>
@@ -139,7 +139,7 @@ export default function SplitViewer({ onScheme }: { onScheme?: (s: Scheme) => vo
         ))}
         <div className="flex items-center gap-2 pt-1">
           <span className="w-16 shrink-0" />
-          <div className="flex flex-1 justify-between text-[10px]" style={{ color: "var(--text-muted)" }}>
+          <div className="flex flex-1 justify-between text-small" style={{ color: "var(--text-muted)" }}>
             <span>start of recording</span>
             <span>20 seconds later</span>
           </div>
@@ -148,15 +148,15 @@ export default function SplitViewer({ onScheme }: { onScheme?: (s: Scheme) => vo
 
       <div className="mt-4 flex flex-wrap gap-x-4 gap-y-1.5">
         {roles.map((r) => (
-          <span key={r} className="inline-flex items-center gap-1.5 text-[12px]"
+          <span key={r} className="inline-flex items-center gap-1.5 text-body"
                 style={{ color: "var(--text-secondary)" }}>
-            <span className="inline-block h-2.5 w-2.5 rounded-[2px]" style={{ background: ROLE_STYLE[r].bg }} />
+            <span className="inline-block h-2.5 w-2.5" style={{ background: ROLE_STYLE[r].bg }} />
             {ROLE_STYLE[r].label}
           </span>
         ))}
       </div>
 
-      <p className="mt-4 text-[13px] leading-relaxed" style={{ color: "var(--text-secondary)" }}>
+      <p className="mt-4 text-body leading-relaxed" style={{ color: "var(--text-secondary)" }}>
         {COPY[scheme].caption}
       </p>
     </div>

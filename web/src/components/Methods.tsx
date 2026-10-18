@@ -14,8 +14,8 @@ export default function Methods() {
     >
       <div className="grid gap-4 lg:grid-cols-2">
         <Card>
-          <h3 className="mb-3 text-[14px] font-medium">Pipeline</h3>
-          <ol className="list-inside list-decimal space-y-2 text-[13px]" style={{ color: "var(--text-secondary)" }}>
+          <h3 className="mb-3 text-body font-medium">Pipeline</h3>
+          <ol className="list-inside list-decimal space-y-2 text-body" style={{ color: "var(--text-secondary)" }}>
             <li>Filter the signal to keep 20 to 450 Hz, and notch out mains hum at 60 Hz and its harmonics. The filter runs forwards and backwards so it does not shift anything in time.</li>
             <li>Cut the recordings into overlapping windows, each tagged with who it came from, which gesture, and where in the recording it sits. That last tag is what makes the time-based split possible.</li>
             <li>Take five measurements per sensor: mean absolute value, root mean square, waveform length, zero crossings, slope sign changes.</li>
@@ -26,8 +26,8 @@ export default function Methods() {
         </Card>
 
         <Card>
-          <h3 className="mb-3 text-[14px] font-medium">Limitations</h3>
-          <ul className="space-y-2.5 text-[13px]" style={{ color: "var(--text-secondary)" }}>
+          <h3 className="mb-3 text-body font-medium">Limitations</h3>
+          <ul className="space-y-2.5 text-body" style={{ color: "var(--text-secondary)" }}>
             <li>
               <strong style={{ color: "var(--text-primary)" }}>Eight subjects.</strong> Every
               confidence interval on this page is wide for that reason. Treat differences of
@@ -63,15 +63,15 @@ export default function Methods() {
       </div>
 
       <Card className="mt-4">
-        <h3 className="mb-3 text-[14px] font-medium">Reproducing this</h3>
-        <p className="mb-3 text-[13px]" style={{ color: "var(--text-secondary)" }}>
+        <h3 className="mb-3 text-body font-medium">Reproducing this</h3>
+        <p className="mb-3 text-body" style={{ color: "var(--text-secondary)" }}>
           Every number and chart on this site rebuilds from the raw text files, with the
           random seeds fixed so you get the same answers I did. The tests check the claims
           this project rests on: that scrambled labels score at chance, that no person
           appears in both training and testing, that the time-based split really has a gap
           in it, and that the shortcut split really does beat the honest one.
         </p>
-        <pre className="scroll-x rounded-lg border p-3 font-[family-name:var(--font-mono)] text-[12px] leading-relaxed"
+        <pre className="scroll-x p-3 text-body leading-relaxed"
              style={{ background: "var(--surface-2)" }}>
 {`git clone ${REPO}
 uv venv --python 3.12 .venv
@@ -79,7 +79,7 @@ uv pip install --python .venv/bin/python -r requirements.txt
 .venv/bin/python -m pytest tests/ -q
 .venv/bin/python run_all.py`}
         </pre>
-        <p className="mt-4 text-[12px]" style={{ color: "var(--text-muted)" }}>
+        <p className="mt-4 text-body" style={{ color: "var(--text-muted)" }}>
           Built from muscle recordings of 8 people, 5 gestures each, 4 sensors. Code and
           full results: <a href={REPO} className="underline underline-offset-4" style={{ color: "var(--accent)" }}>{REPO.replace("https://", "")}</a>
         </p>

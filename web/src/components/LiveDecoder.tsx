@@ -21,15 +21,15 @@ function DecoderPanel({ title, subtitle, probs, pred, disabled, acc, n, ms, gcol
   acc: number | null; n: number; ms: number; gcol: string[];
 }) {
   return (
-    <div className="rounded-lg border p-4">
+    <div className="p-4">
       <div className="mb-3 flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
         <div>
-          <div className="text-[13px] font-medium">{title}</div>
-          <div className="text-[11px]" style={{ color: "var(--text-muted)" }}>{subtitle}</div>
+          <div className="text-body font-medium">{title}</div>
+          <div className="text-small" style={{ color: "var(--text-muted)" }}>{subtitle}</div>
         </div>
-        <div className="flex items-baseline gap-3 text-[11px]" style={{ color: "var(--text-muted)" }}>
-          <span className="tnum font-[family-name:var(--font-mono)]">{ms.toFixed(2)} ms</span>
-          <span className="tnum font-[family-name:var(--font-mono)] text-[14px]"
+        <div className="flex items-baseline gap-3 text-small" style={{ color: "var(--text-muted)" }}>
+          <span className="tnum">{ms.toFixed(2)} ms</span>
+          <span className="tnum text-body"
                 style={{ color: "var(--text-primary)" }}>
             {acc === null ? "n/a" : pct(acc, 1)}
           </span>
@@ -38,22 +38,22 @@ function DecoderPanel({ title, subtitle, probs, pred, disabled, acc, n, ms, gcol
       <div className="space-y-1.5">
         {GESTURE_NAMES.map((name, i) => (
           <div key={i} className="grid grid-cols-[5.5rem_1fr_2.6rem] items-center gap-2">
-            <span className="text-[12px]" style={{
+            <span className="text-body" style={{
               color: i === pred && !disabled ? "var(--text-primary)" : "var(--text-secondary)",
               fontWeight: i === pred && !disabled ? 600 : 400,
             }}>{name}</span>
-            <div className="h-4 rounded-[4px]" style={{ background: "var(--surface-2)" }}>
-              <div className="h-full rounded-[4px] transition-[width] duration-100"
+            <div className="h-4" style={{ background: "var(--surface-2)" }}>
+              <div className="h-full transition-[width] duration-100"
                    style={{ width: `${(probs[i] ?? 0) * 100}%`, background: gcol[i] }} />
             </div>
-            <span className="tnum text-right font-[family-name:var(--font-mono)] text-[10px]"
+            <span className="tnum text-right text-small"
                   style={{ color: "var(--text-muted)" }}>
               {Math.round((probs[i] ?? 0) * 100)}%
             </span>
           </div>
         ))}
       </div>
-      <div className="mt-2 text-[11px]" style={{ color: "var(--text-muted)" }}>
+      <div className="mt-2 text-small" style={{ color: "var(--text-muted)" }}>
         {n > 0 ? `${n} windows scored so far` : "waiting to warm up"}
       </div>
     </div>
@@ -297,7 +297,7 @@ export default function LiveDecoder() {
       }
     >
       {err && (
-        <Card className="mb-4"><p className="text-[13px]" style={{ color: "var(--warn)" }}>{err}</p></Card>
+        <Card className="mb-4"><p className="text-body" style={{ color: "var(--warn)" }}>{err}</p></Card>
       )}
 
       <Card>
@@ -305,17 +305,17 @@ export default function LiveDecoder() {
           <button
             onClick={() => setPlaying((p) => !p)}
             disabled={!model || !meta}
-            className="focusable rounded-lg px-4 py-2 text-[13px] font-medium disabled:opacity-40"
+            className="focusable px-4 py-2 text-body font-medium disabled:opacity-40"
             style={{ background: "var(--accent)", color: "var(--on-accent)" }}>
             {playing ? "Pause" : model ? "Start decoding" : "Loading…"}
           </button>
           <button onClick={() => { setPlaying(false); reset(); }}
-                  className="focusable rounded-lg border px-3 py-2 text-[13px]">Reset</button>
+                  className="focusable px-3 py-2 text-body">Reset</button>
           <div className="flex items-center gap-2">
-            <span className="text-[12px]" style={{ color: "var(--text-muted)" }}>Speed</span>
+            <span className="text-body" style={{ color: "var(--text-muted)" }}>Speed</span>
             {[0.5, 1, 2, 4].map((s) => (
               <button key={s} onClick={() => setSpeed(s)}
-                className="focusable rounded-md border px-2 py-1 font-[family-name:var(--font-mono)] text-[11px]"
+                className="focusable px-2 py-1 text-small"
                 style={speed === s ? { background: "var(--accent)", color: "var(--on-accent)", borderColor: "var(--accent)" } : {}}>
                 {s}×
               </button>
@@ -323,24 +323,24 @@ export default function LiveDecoder() {
           </div>
         </div>
 
-        <div ref={scopeWrap} className="rounded-lg border" style={{ background: "var(--surface-2)" }}>
+        <div ref={scopeWrap} style={{ background: "var(--surface-2)" }}>
           <canvas ref={canvas} className="block h-[180px] w-full" />
         </div>
-        <p className="mt-2 text-[11px]" style={{ color: "var(--text-muted)" }}>
+        <p className="mt-2 text-small" style={{ color: "var(--text-muted)" }}>
           Four sensors, last {DISPLAY_S} seconds. The shaded box is the chunk of signal
           the decoder is looking at right now.
         </p>
 
         {warming && playing && (
-          <div className="mt-4 rounded-lg border p-3" style={{ background: "var(--warn-soft)" }}>
-            <div className="mb-2 flex items-center justify-between text-[12px]" style={{ color: "var(--warn)" }}>
+          <div className="mt-4 p-3" style={{ background: "var(--warn-soft)" }}>
+            <div className="mb-2 flex items-center justify-between text-body" style={{ color: "var(--warn)" }}>
               <span>Warming up. Needs about {meta?.warmup_seconds ?? 10} seconds of wear first.</span>
-              <span className="tnum font-[family-name:var(--font-mono)]">{Math.round(warm * 100)}%</span>
+              <span className="tnum">{Math.round(warm * 100)}%</span>
             </div>
-            <div className="h-1.5 overflow-hidden rounded-full" style={{ background: "var(--surface-3)" }}>
-              <div className="h-full rounded-full transition-[width]" style={{ width: `${warm * 100}%`, background: "var(--warn)" }} />
+            <div className="h-1.5 overflow-hidden" style={{ background: "var(--surface-3)" }}>
+              <div className="h-full transition-[width]" style={{ width: `${warm * 100}%`, background: "var(--warn)" }} />
             </div>
-            <p className="mt-2 text-[11px]" style={{ color: "var(--text-muted)" }}>
+            <p className="mt-2 text-small" style={{ color: "var(--text-muted)" }}>
               It is not being told any answers here. It is just measuring how loud and how
               varied your signal normally is, which is something a real wristband can work
               out on its own.
@@ -367,9 +367,9 @@ export default function LiveDecoder() {
                 ms={cnnMs} gcol={gcol}
               />
             ) : (
-              <div className="rounded-lg border border-dashed p-4">
-                <div className="text-[13px] font-medium">The neural network</div>
-                <p className="mt-1 text-[12px] leading-relaxed" style={{ color: "var(--text-muted)" }}>
+              <div className="border-dashed p-4">
+                <div className="text-body font-medium">The neural network</div>
+                <p className="mt-1 text-body leading-relaxed" style={{ color: "var(--text-muted)" }}>
                   Run the neural network next to the simple model and watch them race on
                   the same signal. It needs an 11 MB runtime file, so it only downloads if
                   you ask for it.
@@ -377,13 +377,13 @@ export default function LiveDecoder() {
                 <button
                   onClick={enableCnn}
                   disabled={cnnState === "loading" || cnnState === "failed"}
-                  className="focusable mt-3 rounded-lg border px-3 py-1.5 text-[12px] font-medium disabled:opacity-50">
+                  className="focusable mt-3 px-3 py-1.5 text-body font-medium disabled:opacity-50">
                   {cnnState === "loading" ? "Loading, this takes a moment"
                     : cnnState === "failed" ? "That did not load. The simple decoder is still fine."
                     : "Load it and race them"}
                 </button>
                 {cnnErr && (
-                  <p className="mt-2 font-[family-name:var(--font-mono)] text-[11px]" style={{ color: "var(--warn)" }}>
+                  <p className="mt-2 text-small" style={{ color: "var(--warn)" }}>
                     {cnnErr}
                   </p>
                 )}
@@ -391,30 +391,30 @@ export default function LiveDecoder() {
             )}
           </div>
 
-          <div className="rounded-lg border p-4" style={{ background: "var(--surface-2)" }}>
-            <div className="text-[11px] uppercase tracking-wider" style={{ color: "var(--text-muted)" }}>
+          <div className="p-4" style={{ background: "var(--surface-2)" }}>
+            <div className="text-small r" style={{ color: "var(--text-muted)" }}>
               Ground truth
             </div>
-            <div className="mt-1 flex items-center gap-2 text-[18px] font-medium">
-              <span className="inline-block h-3 w-3 rounded-full" style={{ background: gcol[truth] }} />
+            <div className="mt-1 flex items-center gap-2 text-body font-medium">
+              <span className="inline-block h-3 w-3" style={{ background: gcol[truth] }} />
               {GESTURE_NAMES[truth]}
             </div>
-            <dl className="mt-4 space-y-1.5 border-t pt-3 text-[12px]">
+            <dl className="mt-4 space-y-1.5 pt-3 text-body">
               <div className="flex justify-between">
                 <dt style={{ color: "var(--text-muted)" }}>Person</dt>
-                <dd className="tnum font-[family-name:var(--font-mono)]">{meta?.subject ?? "?"}, held out</dd>
+                <dd className="tnum">{meta?.subject ?? "?"}, held out</dd>
               </div>
               <div className="flex justify-between">
                 <dt style={{ color: "var(--text-muted)" }}>Signal used</dt>
-                <dd className="tnum font-[family-name:var(--font-mono)]">{meta?.window_samples ?? "?"} samples</dd>
+                <dd className="tnum">{meta?.window_samples ?? "?"} samples</dd>
               </div>
               <div className="flex justify-between">
                 <dt style={{ color: "var(--text-muted)" }}>New answer every</dt>
-                <dd className="tnum font-[family-name:var(--font-mono)]">{meta?.hop_samples ?? "?"} samples</dd>
+                <dd className="tnum">{meta?.hop_samples ?? "?"} samples</dd>
               </div>
             </dl>
             {cnnState === "on" && cnnDecodes > 0 && decodes > 0 && (
-              <p className="mt-3 border-t pt-3 text-[12px] leading-relaxed" style={{ color: "var(--text-secondary)" }}>
+              <p className="mt-3 pt-3 text-body leading-relaxed" style={{ color: "var(--text-secondary)" }}>
                 On the windows both have seen, the simple model is{" "}
                 <strong style={{ color: "var(--text-primary)" }}>
                   {(((correct / decodes) - (cnnCorrect / cnnDecodes)) * 100).toFixed(1)} pp
@@ -440,8 +440,8 @@ export default function LiveDecoder() {
       </div>
 
       <Card className="mt-4">
-        <h3 className="mb-1 text-[14px] font-medium">How long before it works at all?</h3>
-        <p className="mb-4 text-[13px]" style={{ color: "var(--text-secondary)" }}>
+        <h3 className="mb-1 text-body font-medium">How long before it works at all?</h3>
+        <p className="mb-4 text-body" style={{ color: "var(--text-secondary)" }}>
           Before the decoder can rescale anything, it has to watch your arm long enough to
           learn what normal looks like for you. Until then it is guessing. This is a real
           cost of skipping the setup routine, and I have not seen anyone report it.
@@ -449,20 +449,20 @@ export default function LiveDecoder() {
         <div className="space-y-1.5">
           {realtime.warmup_curve.map((w) => (
             <div key={w.warmup_s} className="grid grid-cols-[3.6rem_1fr_3.4rem] items-center gap-3">
-              <span className="tnum font-[family-name:var(--font-mono)] text-[12px]"
+              <span className="tnum text-body"
                     style={{ color: "var(--text-secondary)" }}>{w.warmup_s}s</span>
-              <div className="h-5 rounded-[4px]" style={{ background: "var(--surface-2)" }}>
-                <div className="h-full rounded-[4px]"
+              <div className="h-5" style={{ background: "var(--surface-2)" }}>
+                <div className="h-full"
                      style={{ width: `${w.accuracy_steady * 100}%`,
                               background: w.warmup_s === realtime.demo_warmup_s ? "var(--accent)" : "var(--border-strong)" }} />
               </div>
-              <span className="tnum text-right font-[family-name:var(--font-mono)] text-[12px]">
+              <span className="tnum text-right text-body">
                 {pct(w.accuracy_steady, 1)}
               </span>
             </div>
           ))}
         </div>
-        <p className="mt-3 text-[12px]" style={{ color: "var(--text-muted)" }}>
+        <p className="mt-3 text-body" style={{ color: "var(--text-muted)" }}>
           The highlighted bar is the {realtime.demo_warmup_s} seconds the demo above uses.
           Two seconds is nowhere near enough. Accuracy falls to{" "}
           {pct(realtime.warmup_curve[0].accuracy_steady, 0)}.
@@ -470,8 +470,8 @@ export default function LiveDecoder() {
       </Card>
 
       <Card className="mt-4">
-        <h3 className="mb-1 text-[14px] font-medium">What the headline number was hiding</h3>
-        <p className="text-[13px] leading-relaxed" style={{ color: "var(--text-secondary)" }}>
+        <h3 className="mb-1 text-body font-medium">What the headline number was hiding</h3>
+        <p className="text-body leading-relaxed" style={{ color: "var(--text-secondary)" }}>
           The headline accuracy leans on rescaling the measurements for each person. Doing
           that properly needs their numbers from all five gestures at once, which no device
           has when you switch it on. Swapping it for a running estimate that only uses the

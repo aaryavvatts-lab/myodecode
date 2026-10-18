@@ -47,9 +47,9 @@ export default function Privacy() {
 
       <H2>Fonts and outside servers</H2>
       <P>
-        The site uses three typefaces that came from Google Fonts. They are downloaded
-        once when the site is built and then served from this domain. Your browser never
-        contacts Google to load them, so Google does not see your visit.
+        The site uses one typeface, Erode, under the ITF Free Font License. It is bundled
+        when the site is built and served from this domain, so your browser never contacts
+        a font host and no one else sees your visit.
       </P>
       <P>
         Everything else the page loads comes from this domain too. That includes the
@@ -66,9 +66,9 @@ export default function Privacy() {
 
       <H2>What gets stored in your browser</H2>
       <P>
-        One thing, and only if you dismiss the notice at the bottom of the screen. It is
-        a single browser storage entry that remembers you closed it, so it does not come
-        back on every page. It holds no identifier and it never leaves your device. The{" "}
+        One thing, and only if you press the Light or Dark control in the header. It is
+        a single browser storage entry that remembers the colours you picked, so the next
+        page matches. It holds no identifier and it never leaves your device. The{" "}
         <A href="/cookies">cookie page</A> explains this in more detail and shows you how
         to clear it.
       </P>

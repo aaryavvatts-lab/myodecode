@@ -1,11 +1,20 @@
 import type { Metadata } from "next";
-import { Inter, JetBrains_Mono, Newsreader } from "next/font/google";
+import localFont from "next/font/local";
 import "./globals.css";
-import { Notice, SiteFooter, SkipLink } from "@/components/SiteChrome";
+import { SiteFooter, SiteHeader, SkipLink } from "@/components/SiteChrome";
 
-const inter = Inter({ subsets: ["latin"], variable: "--font-sans", display: "swap" });
-const mono = JetBrains_Mono({ subsets: ["latin"], variable: "--font-mono", display: "swap" });
-const serif = Newsreader({ subsets: ["latin"], variable: "--font-serif", display: "swap" });
+// Erode, by Indian Type Foundry via Fontshare (ITF Free Font License), self-hosted so no font
+// host sees a visit.
+const erode = localFont({
+  variable: "--font-erode",
+  display: "swap",
+  src: [
+    { path: "./fonts/Erode-Regular.woff2", weight: "400", style: "normal" },
+    { path: "./fonts/Erode-Italic.woff2", weight: "400", style: "italic" },
+    { path: "./fonts/Erode-Medium.woff2", weight: "500", style: "normal" },
+    { path: "./fonts/Erode-Semibold.woff2", weight: "600", style: "normal" },
+  ],
+});
 
 // Without this the link preview image resolves against localhost. Vercel sets the
 // production domain at build time; fall back to the per-deploy URL, then to local.
@@ -31,14 +40,25 @@ export const metadata: Metadata = {
   twitter: { card: "summary_large_image" },
 };
 
+// Runs before first paint: marks JavaScript as working and applies a saved theme. The old
+// notice key this site used is removed.
+const themeHead =
+  "(function(){var d=document.documentElement;d.classList.add('js');try{var t=localStorage.getItem('theme');" +
+  "if(t==='dark'||t==='light')d.setAttribute('data-theme',t);localStorage.removeItem('myodecode-notice');}catch(e){}})();";
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
-      <body className={`${inter.variable} ${mono.variable} ${serif.variable} font-[family-name:var(--font-sans)] antialiased`}>
+    <html lang="en" className={erode.variable} suppressHydrationWarning>
+      <head>
+        <meta name="color-scheme" content="light dark" />
+        <meta name="theme-color" content="#f4f3ef" />
+        <script dangerouslySetInnerHTML={{ __html: themeHead }} />
+      </head>
+      <body className="antialiased">
         <SkipLink />
+        <SiteHeader />
         {children}
         <SiteFooter />
-        <Notice />
       </body>
     </html>
   );
